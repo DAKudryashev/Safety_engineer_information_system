@@ -1,13 +1,13 @@
 import sys
-import webbrowser
-from PyQt5.QtWidgets import (QMainWindow, QApplication, QTabWidget, QFrame, QMessageBox,
-                             QWidget, QLabel, QVBoxLayout, QTableWidget, QTableWidgetItem, QPushButton)
+from PyQt5.QtWidgets import (QMainWindow, QApplication, QTabWidget, QFrame, QMessageBox)
 from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve
 
 from login_dialog import LoginDialog
 from database import DataBase
 from documents_layout import DocumentsLayout
-from employee_layout import EmployeeLayout
+from employees_layout import EmployeesLayout
+from rooms_layout import RoomsLayout
+from briefings_layout import BriefingsLayout
 
 
 class InformationSys(QMainWindow):
@@ -28,33 +28,28 @@ class InformationSys(QMainWindow):
         self.tabs = QTabWidget()
         self.setCentralWidget(self.tabs)
 
-        self.tab2 = EmployeeLayout()
-        self.tabs.addTab(self.tab2, 'Сотрудники')
+        self.tab1 = RoomsLayout()
+        self.data = self.db.get_rooms()
+        self.tab1.fill_rooms_table(self.data)
+        self.tabs.addTab(self.tab1, 'Помещения')
 
-        self.tab3 = DocumentsLayout()
+        self.tab2 = BriefingsLayout()
+        self.data = self.db.get_planned_briefings()
+        self.tab2.fill_planned_table(self.data)
+        self.data = self.db.get_completed_briefings()
+        self.tab2.fill_completed_documents(self.data)
+        self.tabs.addTab(self.tab2, 'Инструктажи')
+
+        self.tab3 = EmployeesLayout()
+        self.tabs.addTab(self.tab3, 'Сотрудники')
+
+        # Добавляем третью вкладку, заполняем содержимое
+        self.tab4 = DocumentsLayout()
         self.data = self.db.get_regulatory_documents()
-        self.tab3.fill_regulatory_table(self.data)
+        self.tab4.fill_regulatory_table(self.data)
         self.data = self.db.get_internal_documents()
-        self.tab3.fill_internal_documents(self.data)
-        self.tabs.addTab(self.tab3, 'Документы')
-        # # Создаем несколько вкладок
-        # self.tab1 = QWidget()
-        # self.tab2 = QWidget()
-        # self.tab3 = QWidget()
-        #
-        # # Добавляем содержимое на вкладки
-        # self.tab1.layout = QVBoxLayout()
-        # self.tab1.layout.addWidget(QLabel("Содержимое первой вкладки"))
-        # self.tab1.setLayout(self.tab1.layout)
-        #
-        # self.tab2.layout = QVBoxLayout()
-        # self.tab2.layout.addWidget(QLabel("Содержимое второй вкладки"))
-        # self.tab2.setLayout(self.tab2.layout)
-        #
-        # # Добавляем вкладки в виджет
-        # self.tabs.addTab(self.tab1, "Сотрудники")
-        # self.tabs.addTab(self.tab2, "Инструктажи")
-        # self.tabs.addTab(self.tab3, "Документы")
+        self.tab4.fill_internal_documents(self.data)
+        self.tabs.addTab(self.tab4, 'Документы')
 
         # Показываем login-окно, затемняем окружение
         self.login_dialog.show()

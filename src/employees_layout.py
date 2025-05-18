@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel
 
 
-class EmployeeLayout(QWidget):
+class EmployeesLayout(QWidget):
     def __init__(self):
         super().__init__()
 
