@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import (QMainWindow, QApplication, QTabWidget, QFrame, QMessageBox)
+from PyQt5.QtWidgets import QMainWindow, QApplication, QTabWidget, QFrame, QMessageBox
 
 from src.dialogs.login_dialog import LoginDialog
 from database import DataBase
@@ -22,6 +22,7 @@ class InformationSys(QMainWindow):
         # Подключаем БД
         self.db = DataBase()
         self.engineers = self.db.get_engineers()
+        self.data = []
 
         # Устанавливаем параметры главного окна
         self.setWindowTitle("Система инженера безопасности")
@@ -39,61 +40,50 @@ class InformationSys(QMainWindow):
         self.tabs.addTab(self.tab1, 'Помещения')
 
         # Добавляем вкладку инструктажей, заполняем содержимое
-        self.tab2 = BriefingsLayout()
-        self.data = self.db.get_planned_briefings()
-        self.tab2.fill_planned_table(self.data)
-        self.data = self.db.get_completed_briefings()
-        self.tab2.fill_completed_table(self.data)
+        self.tab2 = BriefingsLayout(self.db)
+        self.tab2.fill_planned_table(self.db.get_planned_briefings())
+        self.tab2.fill_completed_table(self.db.get_completed_briefings())
         self.tabs.addTab(self.tab2, 'Инструктажи')
 
         # Добавляем вкладку сотрудников, заполняем содержимое
-        self.tab3 = EmployeesLayout()
-        self.data = self.db.get_employees()
-        self.tab3.fill_employees_table(self.data)
+        self.tab3 = EmployeesLayout(self.db)
+        self.tab3.fill_employees_table(self.db.get_employees())
         self.tabs.addTab(self.tab3, 'Сотрудники')
 
         # Добавляем вкладку документов, заполняем содержимое
-        self.tab4 = DocumentsLayout()
-        self.data = self.db.get_regulatory_documents()
-        self.tab4.fill_regulatory_table(self.data)
-        self.data = self.db.get_internal_documents()
-        self.tab4.fill_internal_table(self.data)
+        self.tab4 = DocumentsLayout(self.db)
+        self.tab4.fill_regulatory_table(self.db.get_regulatory_documents())
+        self.tab4.fill_internal_table(self.db.get_internal_documents())
         self.tabs.addTab(self.tab4, 'Документы')
 
         # Добавляем вкладку допусков, заполняем содержимое
-        self.tab5 = ExaminationsLayout()
-        self.data = self.db.get_examinations()
-        self.tab5.fill_exams_table(self.data)
+        self.tab5 = ExaminationsLayout(self.db)
+        self.tab5.fill_exams_table(self.db.get_examinations())
         self.tabs.addTab(self.tab5, 'Экзамены на допуск')
 
         # Добавляем вкладку медосмотров, заполняем содержимое
-        self.tab6 = MedExaminationsLayout()
-        self.data = self.db.get_med_examinations()
-        self.tab6.fill_med_exams_table(self.data)
+        self.tab6 = MedExaminationsLayout(self.db)
+        self.tab6.fill_med_exams_table(self.db.get_med_examinations())
         self.tabs.addTab(self.tab6, 'Медосмотры')
 
         # Добавляем вкладку оборудования, заполняем содержимое
-        self.tab7 = EquipmentLayout()
-        self.data = self.db.get_equipment()
-        self.tab7.fill_equipment_table(self.data)
+        self.tab7 = EquipmentLayout(self.db)
+        self.tab7.fill_equipment_table(self.db.get_equipment())
         self.tabs.addTab(self.tab7, 'Оборудование')
 
         # Добавляем вкладку инцидентов, заполняем содержимое
-        self.tab8 = IncidentsLayout()
-        self.data = self.db.get_incidents()
-        self.tab8.fill_incidents_table(self.data)
+        self.tab8 = IncidentsLayout(self.db)
+        self.tab8.fill_incidents_table(self.db.get_incidents())
         self.tabs.addTab(self.tab8, 'Инциденты')
 
         # Добавляем вкладку жалоб сотрудников, заполняем содержимое
-        self.tab9 = ComplaintsLayout()
-        self.data = self.db.get_complaints()
-        self.tab9.fill_complaints_table(self.data)
+        self.tab9 = ComplaintsLayout(self.db)
+        self.tab9.fill_complaints_table(self.db.get_complaints())
         self.tabs.addTab(self.tab9, 'Жалобы сотрудников')
 
         # Добавляем дополнительную вкладку, заполняем содержимое
         self.tab10 = ExtraLayout()
-        self.data = self.db.get_engineers_without_passwords()
-        self.tab10.fill_engineers_table(self.data)
+        self.tab10.fill_engineers_table(self.db.get_engineers_without_passwords())
         self.tabs.addTab(self.tab10, 'Дополнительно')
 
         # Показываем login-окно, затемняем окружение
@@ -108,6 +98,14 @@ class InformationSys(QMainWindow):
         self.tab10.escape_button.clicked.connect(self.exit_app)
 
         print(self.db is self.tab1.db)
+        print(self.db is self.tab2.db)
+        print(self.db is self.tab3.db)
+        print(self.db is self.tab4.db)
+        print(self.db is self.tab5.db)
+        print(self.db is self.tab6.db)
+        print(self.db is self.tab7.db)
+        print(self.db is self.tab8.db)
+        print(self.db is self.tab9.db)
 
     def authenticate(self):
         """Проверка учетных данных"""

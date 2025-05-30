@@ -5,8 +5,14 @@ import os
 
 
 class DocumentsLayout(QWidget):
-    def __init__(self):
+    def __init__(self, db):
         super().__init__()
+
+        # Увеличиваем кнопки
+        self.setStyleSheet("QPushButton { font-size: 11pt; }")
+
+        # Подключаем существующий экземпляр БД
+        self.db = db
 
         layout = QVBoxLayout()
         layout.addWidget(QLabel('Регулирующие документы:'))

@@ -5,13 +5,19 @@ from PyQt5.QtCore import Qt
 
 
 class ExaminationsLayout(QWidget):
-    def __init__(self):
+    def __init__(self, db):
         super().__init__()
 
+        # Увеличиваем кнопки
+        self.setStyleSheet("QPushButton { font-size: 11pt; }")
+
+        # Подключаем существующий экземпляр БД
+        self.db = db
+
         layout = QVBoxLayout()
-        layout.addWidget(QLabel('Список:'))
 
         # Размещение элементов
+        layout.addWidget(QLabel('Список:'))
         self.exams_layout = QHBoxLayout()
         self.exams_table = QTableWidget()
         self.exams_layout.addWidget(self.exams_table, stretch=6)  # Таблица займет 6/9 пространства

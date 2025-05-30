@@ -4,10 +4,16 @@ import os
 
 
 class BriefingsLayout(QWidget):
-    def __init__(self):
+    def __init__(self, db):
         super().__init__()
 
         layout = QVBoxLayout()
+
+        # Увеличиваем кнопки
+        self.setStyleSheet("QPushButton { font-size: 11pt; }")
+
+        # Подключаем существующий экземпляр БД
+        self.db = db
 
         # Размещение элементов для запланированных инструктажей
         layout.addWidget(QLabel('Запланированные инструктажи:'))
@@ -58,6 +64,20 @@ class BriefingsLayout(QWidget):
 
         # Закрепление слоя на вкладке
         self.setLayout(layout)
+
+        # Обработка нажатий кнопок запланированного слоя
+        self.planned_search_button.clicked.connect(self.planned_search_button_clicked)
+        self.planned_insert_button.clicked.connect(self.planned_insert_button_clicked)
+        self.planned_update_button.clicked.connect(self.planned_update_button_clicked)
+        self.planned_delete_button.clicked.connect(self.planned_delete_button_clicked)
+        self.planned_reset_button.clicked.connect(self.planned_reset_button_clicked)
+
+        # Обработка нажатий кнопок проведенного слоя
+        # self.comp_search_button.clicked.connect()
+        # self.comp_insert_button.clicked.connect()
+        # self.comp_update_button.clicked.connect()
+        # self.comp_delete_button.clicked.connect()
+        # self.comp_reset_button.clicked.connect()
 
     def fill_planned_table(self, data):
         self.planned_table.setRowCount(len(data))
@@ -131,3 +151,18 @@ class BriefingsLayout(QWidget):
             os.startfile(file_path)
         else:
             print(f"Файл не найден: {file_path}")
+
+    def planned_search_button_clicked(self):
+        pass
+
+    def planned_insert_button_clicked(self):
+        pass
+
+    def planned_update_button_clicked(self):
+        pass
+
+    def planned_delete_button_clicked(self):
+        pass
+
+    def planned_reset_button_clicked(self):
+        pass

@@ -5,13 +5,19 @@ import os
 
 
 class IncidentsLayout(QWidget):
-    def __init__(self):
+    def __init__(self, db):
         super().__init__()
 
+        # Увеличиваем кнопки
+        self.setStyleSheet("QPushButton { font-size: 11pt; }")
+
+        # Подключаем существующий экземпляр БД
+        self.db = db
+
         layout = QVBoxLayout()
-        layout.addWidget(QLabel('Список:'))
 
         # Размещение элементов
+        layout.addWidget(QLabel('Список:'))
         self.incidents_layout = QHBoxLayout()
         self.incidents_table = QTableWidget()
         self.incidents_layout.addWidget(self.incidents_table, stretch=6)  # Таблица займет 6/9 пространства
