@@ -4,14 +4,31 @@ from config import DBNAME, USER, PASSWORD, HOST
 
 
 class DataBase:
+    _instance = None
+    _initialized = False
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    # Паттерн Singleton
     def __init__(self):
-        self.connection = psycopg2.connect(dbname=DBNAME, user=USER, password=PASSWORD, host=HOST)
-        self.curs = self.connection.cursor()
+        if not DataBase._initialized:
+            self.connection = psycopg2.connect(
+                dbname=DBNAME,
+                user=USER,
+                password=PASSWORD,
+                host=HOST
+            )
+            self.curs = self.connection.cursor()
+            DataBase._initialized = True
 
     def __del__(self):
-        self.connection.commit()
-        self.curs.close()
-        self.connection.close()
+        if hasattr(self, 'connection'):
+            self.connection.commit()
+            self.curs.close()
+            self.connection.close()
 
     def get_engineers(self):
         self.curs.execute('SELECT * FROM engineers')
@@ -60,6 +77,39 @@ class DataBase:
                 rooms r
             JOIN 
                 engineers e ON r.responsible = e.engineer_id;
+        ''')
+        return self.curs.fetchall()
+
+    def get_rooms_references(self):
+        self.curs.execute('SELECT location FROM equipment')
+        return list(set(row[0] for row in self.curs.fetchall()))
+
+    def insert_room(self, data):
+        request = (f"INSERT INTO rooms(name, state, check_date, responsible) VALUES ('{(data[0])}',"
+                   f" '{(data[1])}', DATE'{(data[2])}', {(data[3])})")
+        print(request)
+        self.curs.execute(request)
+
+    def delete_from_rooms(self, room_id):
+        self.curs.execute('DELETE FROM rooms WHERE room_id = ' + room_id)
+
+    def search_rooms(self, data):
+        self.curs.execute(f'''
+            SELECT
+                r.room_id, 
+                r.name AS room_name,
+                r.state,
+                to_char(r.check_date, 'DD.MM.YYYY') AS check_date,
+                e.name AS responsible    
+            FROM 
+                rooms r
+            JOIN 
+                engineers e ON r.responsible = e.engineer_id
+            WHERE
+                r.name LIKE '%{(data['name'])}%'
+                AND r.state LIKE '%{(data['state'])}%'
+                AND r.check_date BETWEEN '{(data['date_from'])}' AND '{(data['date_to'])}'
+                AND e.name LIKE '%{(data['responsible'])}%'
         ''')
         return self.curs.fetchall()
 
@@ -214,5 +264,10 @@ class DataBase:
 
 
 if __name__ == '__main__':
-    db = DataBase()
-    print(db.get_engineers_without_passwords())
+    # Тестирование Singleton
+    db1 = DataBase()
+    db2 = DataBase()
+    print(db1 is db2)  # Должно вывести True - это один и тот же объект
+
+    engineers = db1.get_rooms_references()
+    print(engineers)

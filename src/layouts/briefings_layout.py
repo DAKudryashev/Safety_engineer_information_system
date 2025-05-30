@@ -8,9 +8,9 @@ class BriefingsLayout(QWidget):
         super().__init__()
 
         layout = QVBoxLayout()
-        layout.addWidget(QLabel('Запланированные инструктажи:'))
 
         # Размещение элементов для запланированных инструктажей
+        layout.addWidget(QLabel('Запланированные инструктажи:'))
         self.planned_layout = QHBoxLayout()
         self.planned_table = QTableWidget()
         self.planned_layout.addWidget(self.planned_table, stretch=6)  # Таблица займет 6/7 пространства

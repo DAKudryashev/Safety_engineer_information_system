@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QTabWidget, QFrame, QMessageBox)
 
-from src.layouts.login_dialog import LoginDialog
+from src.dialogs.login_dialog import LoginDialog
 from database import DataBase
 from src.layouts.documents_layout import DocumentsLayout
 from src.layouts.employees_layout import EmployeesLayout
@@ -34,9 +34,8 @@ class InformationSys(QMainWindow):
         self.setCentralWidget(self.tabs)
 
         # Добавляем вкладку помещений, заполняем содержимое
-        self.tab1 = RoomsLayout()
-        self.data = self.db.get_rooms()
-        self.tab1.fill_rooms_table(self.data)
+        self.tab1 = RoomsLayout(self.db)
+        self.tab1.fill_rooms_table(self.db.get_rooms())
         self.tabs.addTab(self.tab1, 'Помещения')
 
         # Добавляем вкладку инструктажей, заполняем содержимое
@@ -107,6 +106,8 @@ class InformationSys(QMainWindow):
 
         # Реализуем закрытие окна
         self.tab10.escape_button.clicked.connect(self.exit_app)
+
+        print(self.db is self.tab1.db)
 
     def authenticate(self):
         """Проверка учетных данных"""
