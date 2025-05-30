@@ -65,7 +65,7 @@ class SearchDialog(QDialog):
         self.date_from = QDateEdit()
         self.date_from.setDisplayFormat("dd.MM.yyyy")
         self.date_from.setCalendarPopup(True)
-        self.date_from.setDate(QDate.currentDate().addMonths(-1))
+        self.date_from.setDate(QDate(1990, 1, 1))
 
         self.date_to = QDateEdit()
         self.date_to.setDisplayFormat("dd.MM.yyyy")

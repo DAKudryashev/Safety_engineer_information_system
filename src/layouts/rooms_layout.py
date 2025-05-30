@@ -4,6 +4,7 @@ from PyQt5.QtCore import Qt
 
 from src.dialogs.rooms.add_room_dialog import AddRowDialog
 from src.dialogs.rooms.search_room_dialog import SearchDialog
+from src.dialogs.rooms.update_room_dialog import UpdateRoomDialog
 
 
 class RoomsLayout(QWidget):
@@ -84,7 +85,8 @@ class RoomsLayout(QWidget):
             search_params = dialog.get_search_params()
             data = self.db.search_rooms(search_params)
             self.rooms_table.setRowCount(0)
-            self.fill_rooms_table(data)
+            if data:
+                self.fill_rooms_table(data)
 
     def insert_button_clicked(self):
         engineers = self.db.get_engineers_without_passwords()
@@ -106,7 +108,31 @@ class RoomsLayout(QWidget):
             QMessageBox.information(self, "Успех", "Запись успешно добавлена!")
 
     def update_button_clicked(self):
-        pass
+        # Считываем id выбранного элемента
+        row = self.rooms_table.currentRow()
+        if row != -1:
+            # Собираем уже имеющиеся данные и передаем в окно изменения
+            to_update = self.rooms_table.item(row, 0).text()
+            engineers = self.db.get_engineers_without_passwords()
+            current = []
+            for i in range(1, self.rooms_table.columnCount()):
+                current.append(self.rooms_table.item(row, i).text())
+            dialog = UpdateRoomDialog(current, engineers)
+
+            # Обрабатываем положительное завершение диалога
+            if dialog.exec_() == QDialog.Accepted:
+                data = dialog.get_data()
+
+                # Подбираем ID согласно выбранному ФИО
+                for engineer in engineers:
+                    if engineer[1] == data[3]:
+                        data[3] = engineer[0]
+                        break
+
+                # Посылаем в БД и обновляем таблицу
+                self.db.update_room(to_update, data)
+                self.rooms_table.setRowCount(0)
+                self.fill_rooms_table(self.db.get_rooms())
 
     def rooms_delete_button_clicked(self):
         row = self.rooms_table.currentRow()

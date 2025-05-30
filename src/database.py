@@ -21,6 +21,7 @@ class DataBase:
                 password=PASSWORD,
                 host=HOST
             )
+            # self.connection.autocommit = True
             self.curs = self.connection.cursor()
             DataBase._initialized = True
 
@@ -89,6 +90,13 @@ class DataBase:
                    f" '{(data[1])}', DATE'{(data[2])}', {(data[3])})")
         print(request)
         self.curs.execute(request)
+
+    def update_room(self, room_id, data):
+        self.curs.execute(f'''
+            UPDATE rooms
+            SET name = '{(data[0])}', state = '{(data[1])}', check_date = DATE'{(data[2])}', responsible = {(data[3])}
+            WHERE room_id = {room_id}
+            ''')
 
     def delete_from_rooms(self, room_id):
         self.curs.execute('DELETE FROM rooms WHERE room_id = ' + room_id)
