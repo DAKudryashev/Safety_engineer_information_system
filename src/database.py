@@ -139,6 +139,77 @@ class DataBase:
         ''')
         return self.curs.fetchall()
 
+    def get_planned_briefing_by_id(self, briefing_id):
+        self.curs.execute(f'''
+            SELECT
+                b.name,
+                b.topic,
+                to_char(b.planned_date, 'DD.MM.YYYY') AS planned_date,
+                e.name AS responsible,
+                d.file_path AS file_path
+            FROM
+                planned_briefings b
+            JOIN
+                engineers e ON b.responsible = e.engineer_id
+            LEFT JOIN
+                internal_documents d ON b.documentation = d.internal_document_id
+            WHERE
+                b.planned_briefing_id = {briefing_id}
+        ''')
+        return self.curs.fetchall()
+
+    def search_planned_briefings(self, data):
+        self.curs.execute(f'''
+            SELECT
+                b.planned_briefing_id,
+                b.name,
+                b.topic,
+                to_char(b.planned_date, 'DD.MM.YYYY') AS planned_date,
+                e.name AS responsible,
+                d.file_path AS file_path
+            FROM
+                planned_briefings b
+            JOIN
+                engineers e ON b.responsible = e.engineer_id
+            LEFT JOIN
+                internal_documents d ON b.documentation = d.internal_document_id
+            WHERE
+                b.name LIKE '%{(data['name'])}%'
+                AND b.topic LIKE '%{(data['topic'])}%'
+                AND b.planned_date BETWEEN '{(data['date_from'])}' AND '{(data['date_to'])}'
+                AND e.name LIKE '%{(data['responsible'])}%'
+        ''')
+        return self.curs.fetchall()
+
+    def insert_planned_briefing(self, data):
+        if len(data) == 5:
+            request = (f"INSERT INTO planned_briefings(name, topic, planned_date, responsible, documentation) "
+                       f"VALUES ('{data[0]}', '{data[1]}', DATE'{data[2]}', {(data[3])}, {(data[4])})")
+        else:
+            request = (f"INSERT INTO planned_briefings(name, topic, planned_date, responsible) "
+                       f"VALUES ('{data[0]}', '{data[1]}', DATE'{data[2]}', {(data[3])})")
+        print(request)
+        self.curs.execute(request)
+
+    def update_planned_briefing(self, data, briefing_id):
+        if len(data) == 5:
+            self.curs.execute(f'''
+                        UPDATE planned_briefings
+                        SET name = '{(data[0])}', topic = '{(data[1])}', planned_date = DATE'{(data[2])}',
+                        responsible = {(data[3])}, documentation = {(data[4])}
+                        WHERE planned_briefing_id = {briefing_id}
+            ''')
+        else:
+            self.curs.execute(f'''
+                        UPDATE planned_briefings
+                        SET name = '{(data[0])}', topic = '{(data[1])}', planned_date = DATE'{(data[2])}',
+                        responsible = {(data[3])}, documentation = NULL
+                        WHERE planned_briefing_id = {briefing_id}
+                        ''')
+
+    def delete_from_planned_briefings(self, briefing_id):
+        self.curs.execute(f'DELETE FROM planned_briefings WHERE planned_briefing_id = {briefing_id}')
+
     def get_completed_briefings(self):
         self.curs.execute('''
             SELECT
@@ -277,5 +348,4 @@ if __name__ == '__main__':
     db2 = DataBase()
     print(db1 is db2)  # Должно вывести True - это один и тот же объект
 
-    engineers = db1.get_rooms_references()
-    print(engineers)
+    print(db1.get_planned_briefing_by_id('1'))

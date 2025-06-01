@@ -1,6 +1,11 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTableWidget, QTableWidgetItem, QPushButton
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+                             QTableWidget, QTableWidgetItem, QPushButton, QDialog)
 from PyQt5.QtCore import Qt
 import os
+
+from src.dialogs.briefings.insert_planned_briefing_dialog import InsertPlannedDialog
+from src.dialogs.briefings.seacrh_planned_briefing_dialog import SearchPlannedDialog
+from src.dialogs.briefings.update_planned_briefing_dialog import UpdatePlannedDialog
 
 
 class BriefingsLayout(QWidget):
@@ -25,7 +30,7 @@ class BriefingsLayout(QWidget):
         self.planned_insert_button = QPushButton('Добавить')
         self.planned_update_button = QPushButton('Изменить')
         self.planned_delete_button = QPushButton('Удалить')
-        self.planned_reset_button = QPushButton('Сбросить')
+        self.planned_reset_button = QPushButton('Обновить')
         self.planned_buttons_layout.addWidget(QLabel('Действия:'))
         self.planned_buttons_layout.addWidget(self.planned_search_button)
         self.planned_buttons_layout.addWidget(self.planned_insert_button)
@@ -38,9 +43,8 @@ class BriefingsLayout(QWidget):
         self.planned_layout.addWidget(self.reg_buttons_widget, stretch=1)  # Кнопки займут 1/7 пространства
         layout.addLayout(self.planned_layout)
 
-        layout.addWidget(QLabel('Проведенные инструктажи:'))
-
         # Размещение элементов для проведенных инструктажей
+        layout.addWidget(QLabel('Проведенные инструктажи:'))
         self.completed_layout = QHBoxLayout()
         self.completed_table = QTableWidget()
         self.completed_layout.addWidget(self.completed_table, stretch=6)  # Таблица займет 6/7 пространства
@@ -49,7 +53,7 @@ class BriefingsLayout(QWidget):
         self.comp_insert_button = QPushButton('Добавить')
         self.comp_update_button = QPushButton('Изменить')
         self.comp_delete_button = QPushButton('Удалить')
-        self.comp_reset_button = QPushButton('Сбросить')
+        self.comp_reset_button = QPushButton('Обновить')
         self.completed_buttons_layout.addWidget(QLabel('Действия:'))
         self.completed_buttons_layout.addWidget(self.comp_search_button)
         self.completed_buttons_layout.addWidget(self.comp_insert_button)
@@ -73,11 +77,11 @@ class BriefingsLayout(QWidget):
         self.planned_reset_button.clicked.connect(self.planned_reset_button_clicked)
 
         # Обработка нажатий кнопок проведенного слоя
-        # self.comp_search_button.clicked.connect()
-        # self.comp_insert_button.clicked.connect()
-        # self.comp_update_button.clicked.connect()
-        # self.comp_delete_button.clicked.connect()
-        # self.comp_reset_button.clicked.connect()
+        self.comp_search_button.clicked.connect(self.completed_search_button_clicked)
+        self.comp_insert_button.clicked.connect(self.completed_insert_button_clicked)
+        self.comp_update_button.clicked.connect(self.completed_update_button_clicked)
+        self.comp_delete_button.clicked.connect(self.completed_delete_button_clicked)
+        self.comp_reset_button.clicked.connect(self.completed_reset_button_clicked)
 
     def fill_planned_table(self, data):
         self.planned_table.setRowCount(len(data))
@@ -153,16 +157,98 @@ class BriefingsLayout(QWidget):
             print(f"Файл не найден: {file_path}")
 
     def planned_search_button_clicked(self):
-        pass
+        dialog = SearchPlannedDialog()
+        if dialog.exec_() == QDialog.Accepted:
+            search_params = dialog.get_search_params()
+            data = self.db.search_planned_briefings(search_params)
+            self.planned_table.setColumnCount(0)
+            if data:
+                self.fill_planned_table(data)
 
     def planned_insert_button_clicked(self):
-        pass
+        engineers = self.db.get_engineers_without_passwords()
+        documents = self.db.get_internal_documents()
+        dialog = InsertPlannedDialog(engineers, documents)
+        if dialog.exec_() == QDialog.Accepted:
+            data = dialog.get_data()
+
+            # Подбираем ID под ФИО ответственного
+            for row in engineers:
+                if row[1] == data[3]:
+                    data[3] = row[0]
+                    break
+
+            # Подпираем ID под название документа (при его указании)
+            if len(data) == 5:
+                for row in documents:
+                    if row[1] == data[4]:
+                        data[4] = row[0]
+                        break
+
+            self.db.insert_planned_briefing(data)
+            self.planned_table.setRowCount(0)
+            self.fill_planned_table(self.db.get_planned_briefings())
 
     def planned_update_button_clicked(self):
-        pass
+        row = self.planned_table.currentRow()
+        if row != -1:
+            # Собираем уже имеющиеся данные и передаем в окно изменения
+            to_update = self.planned_table.item(row, 0).text()
+            engineers = self.db.get_engineers_without_passwords()
+            documents = self.db.get_internal_documents()
+
+            # Извлекаем данные о нынешнем состоянии
+            current = [i for i in self.db.get_planned_briefing_by_id(to_update)[0]]
+            if current[4]:
+                for document in documents:
+                    if document[-1] == current[4]:
+                        current[4] = document[1]
+                        break
+            else:
+                current[4] = ''
+
+            dialog = UpdatePlannedDialog(current, engineers, documents)
+            if dialog.exec_() == QDialog.Accepted:
+                data = dialog.get_data()
+
+                # Подбираем ID под ФИО ответственного
+                for row in engineers:
+                    if row[1] == data[3]:
+                        data[3] = row[0]
+                        break
+
+                # Подпираем ID под название документа (при его указании)
+                if len(data) == 5:
+                    for row in documents:
+                        if row[1] == data[4]:
+                            data[4] = row[0]
+                            break
+
+                self.db.update_planned_briefing(data, to_update)
+                self.planned_table.setRowCount(0)
+                self.fill_planned_table(self.db.get_planned_briefings())
 
     def planned_delete_button_clicked(self):
-        pass
+        row = self.planned_table.currentRow()
+        if row != -1:
+            self.db.delete_from_planned_briefings(self.planned_table.item(row, 0).text())
+            self.planned_table.removeRow(row)
 
     def planned_reset_button_clicked(self):
+        self.planned_table.setColumnCount(0)
+        self.fill_planned_table(self.db.get_planned_briefings())
+
+    def completed_search_button_clicked(self):
+        pass
+
+    def completed_insert_button_clicked(self):
+        pass
+
+    def completed_update_button_clicked(self):
+        pass
+
+    def completed_delete_button_clicked(self):
+        pass
+
+    def completed_reset_button_clicked(self):
         pass
