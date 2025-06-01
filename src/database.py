@@ -361,6 +361,87 @@ class DataBase:
         ''')
         return self.curs.fetchall()
 
+    def get_employees_references(self):
+        self.curs.execute('SELECT by FROM complaints')
+        data = self.curs.fetchall()
+        self.curs.execute('SELECT participant FROM incidents')
+        data = list(data + self.curs.fetchall())
+        return list(set(row[0] for row in data))
+
+    def search_employees(self, data):
+        request = f'''
+            SELECT
+                e.employee_id,
+                e.name,
+                e.pasport_series,
+                e.pasport_number,
+                e.position,
+                e.instructed,
+                b.name,
+                exam.name,
+                exam.results,
+                med_exam.name,
+                med_exam.results
+            FROM
+                employees e
+            LEFT JOIN
+                completed_briefings b ON e.by_briefing = b.completed_briefing_id
+            LEFT JOIN
+                examinations exam ON e.examination = exam.examination_id
+            LEFT JOIN
+                medical_examinations med_exam ON e.med_examination = med_exam.medical_examination_id
+            WHERE 
+                e.name LIKE '%{data['name']}%'
+                AND e.pasport_series LIKE '%{data['passport_series']}%'
+                AND e.pasport_number LIKE '%{data['passport_number']}%'
+                AND e.position LIKE '%{data['position']}%' '''
+        if data['instruction_result']:
+            request += f'''
+                AND e.instructed LIKE '%{data['instruction_result']}%' '''
+        if data['briefing']:
+            request += f'''
+                AND b.name LIKE '%{data['briefing']}%' '''
+        if data['exam']:
+            request += f'''
+                AND exam.name LIKE '%{data['exam']}%' '''
+        if data['exam_result']:
+            request += f'''
+                AND exam.results LIKE '%{data['exam_result']}%' '''
+        if data['medical_exam']:
+            request += f'''        
+                AND med_exam.name LIKE '%{data['medical_exam']}%' '''
+        if data['medical_result']:
+            request += f'''
+                AND med_exam.results LIKE '%{data['medical_result']}%' '''
+        self.curs.execute(request)
+        return self.curs.fetchall()
+
+    def insert_employee(self, data):
+        request = (f"INSERT INTO employees (name, pasport_series, pasport_number, position,"
+                   f"instructed, by_briefing, examination, med_examination) VALUES "
+                   f"('{(data['name'])}', '{(data['passport_series'])}', '{(data['passport_number'])}', "
+                   f"'{(data['position'])}', '{(data['instruction_result'])}', "
+                   f"{(data['briefing'] if data['briefing'] else 'NULL')}, "
+                   f"{(data['exam'] if data['exam'] else 'NULL')}, "
+                   f"{(data['medical_exam'] if data['medical_exam'] else 'NULL')})")
+        print(request)
+        self.curs.execute(request)
+
+    def update_employee(self, data, employee_id):
+        self.curs.execute(f'''
+            UPDATE employees
+            SET name = '{data['name']}', pasport_series = '{data['passport_series']}',
+            pasport_number = '{data['passport_number']}', position = '{data['position']}',
+            instructed = '{data['instruction_result']}',
+            by_briefing = {(data['briefing'] if data['briefing'] else 'NULL')},
+            examination = {(data['exam'] if data['exam'] else 'NULL')},
+            med_examination = {(data['medical_exam'] if data['medical_exam'] else 'NULL')}
+            WHERE employee_id = {employee_id}
+        ''')
+
+    def delete_from_employees(self, employee_id):
+        self.curs.execute(f'DELETE FROM employees WHERE employee_id = {employee_id}')
+
     def get_equipment(self):
         self.curs.execute('''
             SELECT
@@ -423,4 +504,4 @@ if __name__ == '__main__':
     db2 = DataBase()
     print(db1 is db2)  # Должно вывести True - это один и тот же объект
 
-    print(db1.get_completed_briefings_references())
+    print(db1.get_employees_references())

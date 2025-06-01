@@ -1,6 +1,10 @@
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLabel, QHBoxLayout, QTableWidget,
-                             QPushButton, QTableWidgetItem, QSizePolicy)
+                             QPushButton, QTableWidgetItem, QSizePolicy, QMessageBox, QDialog)
 from PyQt5.QtCore import Qt
+
+from src.dialogs.employees.insert_employee_dialog import InsertEmployeeDialog
+from src.dialogs.employees.seacrh_employee_dialog import SearchEmployeeDialog
+from src.dialogs.employees.update_employee_dialog import UpdateEmployeeDialog
 
 
 class EmployeesLayout(QWidget):
@@ -26,7 +30,7 @@ class EmployeesLayout(QWidget):
         self.employees_insert_button = QPushButton('Добавить')
         self.employees_update_button = QPushButton('Изменить')
         self.employees_delete_button = QPushButton('Удалить')
-        self.employees_reset_button = QPushButton('Сбросить')
+        self.employees_reset_button = QPushButton('Обновить')
         self.employees_search_button.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.employees_insert_button.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.employees_update_button.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
@@ -50,6 +54,13 @@ class EmployeesLayout(QWidget):
 
         # Закрепление слоя на вкладке
         self.setLayout(layout)
+
+        # Обрабатываем нажатия кнопок
+        self.employees_search_button.clicked.connect(self.employees_search_button_clicked)
+        self.employees_insert_button.clicked.connect(self.employees_insert_button_clicked)
+        self.employees_update_button.clicked.connect(self.employees_update_button_clicked)
+        self.employees_delete_button.clicked.connect(self.employees_delete_button_clicked)
+        self.employees_reset_button.clicked.connect(self.employees_reset_button_clicked)
     
     def fill_employees_table(self, data):
         self.employees_table.setRowCount(len(data))
@@ -84,4 +95,101 @@ class EmployeesLayout(QWidget):
                                                         'Медосмотр',
                                                         'Результаты'])
         self.employees_table.verticalHeader().setVisible(False)
-        
+
+    def employees_search_button_clicked(self):
+        dialog = SearchEmployeeDialog()
+        if dialog.exec_() == QDialog.Accepted:
+            search_params = dialog.get_search_params()
+            data = self.db.search_employees(search_params)
+            self.employees_table.setRowCount(0)
+            if data:
+                self.fill_employees_table(data)
+
+    def employees_insert_button_clicked(self):
+        briefings = self.db.get_completed_briefings()
+        exams = self.db.get_examinations()
+        medical_exams = self.db.get_med_examinations()
+        dialog = InsertEmployeeDialog(briefings, exams, medical_exams)
+        if dialog.exec_() == QDialog.Accepted:
+            data = dialog.get_data()
+
+            # Ищем соответсвующий ID инструктажа
+            if data['briefing'] is not None:
+                for briefing in briefings:
+                    if briefing[1] == data['briefing']:
+                        data['briefing'] = briefing[0]
+                        break
+
+            # Ищем соответсвующий ID экзамена
+            if data['exam'] is not None:
+                for exam in exams:
+                    if exam[1] == data['exam']:
+                        data['exam'] = exam[0]
+                        break
+
+            # Ищем соответсвующий ID медосмотра
+            if data['medical_exam'] is not None:
+                for exam in medical_exams:
+                    if exam[1] == data['medical_exam']:
+                        data['medical_exam'] = exam[0]
+                        break
+
+            print(data)
+            self.db.insert_employee(data)
+            self.employees_table.setRowCount(0)
+            self.fill_employees_table(self.db.get_employees())
+
+    def employees_update_button_clicked(self):
+        row = self.employees_table.currentRow()
+        if row != -1:
+            # Собираем уже имеющиеся данные и передаем в окно
+            to_update = self.employees_table.item(row, 0).text()
+            briefings = self.db.get_completed_briefings()
+            exams = self.db.get_examinations()
+            medical_exams = self.db.get_med_examinations()
+            current = []
+            for i in range(1, self.employees_table.columnCount()):
+                current.append(self.employees_table.item(row, i).text())
+
+            dialog = UpdateEmployeeDialog(current, briefings, exams, medical_exams)
+            if dialog.exec_() == QDialog.Accepted:
+                data = dialog.get_data()
+
+                # Ищем соответсвующий ID инструктажа
+                if data['briefing'] is not None:
+                    for briefing in briefings:
+                        if briefing[1] == data['briefing']:
+                            data['briefing'] = briefing[0]
+                            break
+
+                # Ищем соответсвующий ID экзамена
+                if data['exam'] is not None:
+                    for exam in exams:
+                        if exam[1] == data['exam']:
+                            data['exam'] = exam[0]
+                            break
+
+                # Ищем соответсвующий ID медосмотра
+                if data['medical_exam'] is not None:
+                    for exam in medical_exams:
+                        if exam[1] == data['medical_exam']:
+                            data['medical_exam'] = exam[0]
+                            break
+
+                self.db.update_employee(data, to_update)
+                self.employees_table.setRowCount(0)
+                self.fill_employees_table(self.db.get_employees())
+
+    def employees_delete_button_clicked(self):
+        row = self.employees_table.currentRow()
+        if row != -1:
+            to_delete = self.employees_table.item(row, 0).text()
+            if int(to_delete) not in self.db.get_employees_references():
+                self.db.delete_from_employees(to_delete)
+                self.employees_table.removeRow(row)
+            else:
+                QMessageBox.warning(None, "Операция отклонена", "Есть внешние ссылки на удаляемый объект!")
+
+    def employees_reset_button_clicked(self):
+        self.employees_table.setRowCount(0)
+        self.fill_employees_table(self.db.get_employees())
