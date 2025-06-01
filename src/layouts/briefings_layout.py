@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMessageBox,
                              QTableWidget, QTableWidgetItem, QPushButton, QDialog)
 from PyQt5.QtCore import Qt
 import os
@@ -6,6 +6,9 @@ import os
 from src.dialogs.briefings.insert_planned_briefing_dialog import InsertPlannedDialog
 from src.dialogs.briefings.seacrh_planned_briefing_dialog import SearchPlannedDialog
 from src.dialogs.briefings.update_planned_briefing_dialog import UpdatePlannedDialog
+from src.dialogs.briefings.search_completed_briefing_dialog import SearchCompletedDialog
+from src.dialogs.briefings.insert_completed_briefing_dialog import InsertCompletedDialog
+from src.dialogs.briefings.update_completed_briefing_dialog import UpdateCompletedDialog
 
 
 class BriefingsLayout(QWidget):
@@ -217,7 +220,7 @@ class BriefingsLayout(QWidget):
                         data[3] = row[0]
                         break
 
-                # Подпираем ID под название документа (при его указании)
+                # Подбираем ID под название документа (при его указании)
                 if len(data) == 5:
                     for row in documents:
                         if row[1] == data[4]:
@@ -239,16 +242,87 @@ class BriefingsLayout(QWidget):
         self.fill_planned_table(self.db.get_planned_briefings())
 
     def completed_search_button_clicked(self):
-        pass
+        dialog = SearchCompletedDialog()
+        if dialog.exec_() == QDialog.Accepted:
+            search_params = dialog.get_search_params()
+            data = self.db.search_completed_briefings(search_params)
+            self.completed_table.setRowCount(0)
+            if data:
+                self.fill_completed_table(data)
 
     def completed_insert_button_clicked(self):
-        pass
+        engineers = self.db.get_engineers_without_passwords()
+        documents = self.db.get_internal_documents()
+        dialog = InsertCompletedDialog(engineers, documents)
+        if dialog.exec_() == QDialog.Accepted:
+            data = dialog.get_data()
+
+            # Подбираем ID под ФИО ответственного
+            for row in engineers:
+                if row[1] == data[3]:
+                    data[3] = row[0]
+                    break
+
+            # Подбираем ID под название документа (при его указании)
+            if len(data) == 5:
+                for row in documents:
+                    if row[1] == data[4]:
+                        data[4] = row[0]
+                        break
+
+            self.db.insert_completed_briefing(data)
+            self.completed_table.setRowCount(0)
+            self.fill_completed_table(self.db.get_completed_briefings())
 
     def completed_update_button_clicked(self):
-        pass
+        row = self.completed_table.currentRow()
+        if row != -1:
+            # Собираем уже имеющиеся данные и передаем в окно изменения
+            to_update = self.completed_table.item(row, 0).text()
+            engineers = self.db.get_engineers_without_passwords()
+            documents = self.db.get_internal_documents()
+
+            # Извлекаем данные о нынешнем состоянии
+            current = [i for i in self.db.get_completed_briefing_by_id(to_update)[0]]
+            if current[4]:
+                for document in documents:
+                    if document[-1] == current[4]:
+                        current[4] = document[1]
+                        break
+            else:
+                current[4] = ''
+
+            dialog = UpdateCompletedDialog(current, engineers, documents)
+            if dialog.exec_() == QDialog.Accepted:
+                data = dialog.get_data()
+
+                # Подбираем ID под ФИО ответственного
+                for row in engineers:
+                    if row[1] == data[3]:
+                        data[3] = row[0]
+                        break
+
+                # Подбираем ID под название документа (при его указании)
+                if len(data) == 5:
+                    for row in documents:
+                        if row[1] == data[4]:
+                            data[4] = row[0]
+                            break
+
+                self.db.update_completed_briefing(data, to_update)
+                self.completed_table.setRowCount(0)
+                self.fill_completed_table(self.db.get_completed_briefings())
 
     def completed_delete_button_clicked(self):
-        pass
+        row = self.completed_table.currentRow()
+        if row != -1:
+            to_delete = self.completed_table.item(row, 0).text()
+            if int(to_delete) not in self.db.get_completed_briefings_references():
+                self.db.delete_from_completed_briefings(to_delete)
+                self.completed_table.removeRow(row)
+            else:
+                QMessageBox.warning(None, "Операция отклонена", "Есть внешние ссылки на удаляемый объект!")
 
     def completed_reset_button_clicked(self):
-        pass
+        self.completed_table.setRowCount(0)
+        self.fill_completed_table(self.db.get_completed_briefings())
