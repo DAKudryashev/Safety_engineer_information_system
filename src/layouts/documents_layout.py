@@ -1,7 +1,15 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTableWidget, QTableWidgetItem, QPushButton
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMessageBox,
+                             QTableWidget, QTableWidgetItem, QPushButton, QDialog)
 from PyQt5.QtCore import Qt
 import webbrowser
 import os
+
+from src.dialogs.documents.insert_regulatory_document_dialog import InsertRegulatoryDialog
+from src.dialogs.documents.search_regulatory_document_dialog import SearchRegulatoryDialog
+from src.dialogs.documents.update_regulatory_document_dialog import UpdateRegulatoryDialog
+from src.dialogs.documents.insert_internal_document_dialog import InsertInternalDialog
+from src.dialogs.documents.search_internal_document_dialog import SearchInternalDialog
+from src.dialogs.documents.update_internal_document_dialog import UpdateInternalDialog
 
 
 class DocumentsLayout(QWidget):
@@ -26,7 +34,7 @@ class DocumentsLayout(QWidget):
         self.reg_insert_button = QPushButton('Добавить')
         self.reg_update_button = QPushButton('Изменить')
         self.reg_delete_button = QPushButton('Удалить')
-        self.reg_reset_button = QPushButton('Сбросить')
+        self.reg_reset_button = QPushButton('Обновить')
         self.regulatory_buttons_layout.addWidget(QLabel('Действия:'))
         self.regulatory_buttons_layout.addWidget(self.reg_search_button)
         self.regulatory_buttons_layout.addWidget(self.reg_insert_button)
@@ -50,7 +58,7 @@ class DocumentsLayout(QWidget):
         self.inter_insert_button = QPushButton('Добавить')
         self.inter_update_button = QPushButton('Изменить')
         self.inter_delete_button = QPushButton('Удалить')
-        self.inter_reset_button = QPushButton('Сбросить')
+        self.inter_reset_button = QPushButton('Обновить')
         self.internal_buttons_layout.addWidget(QLabel('Действия:'))
         self.internal_buttons_layout.addWidget(self.inter_search_button)
         self.internal_buttons_layout.addWidget(self.inter_insert_button)
@@ -65,6 +73,19 @@ class DocumentsLayout(QWidget):
 
         # Закрепление слоя на вкладке
         self.setLayout(layout)
+
+        # Отслеживаем нажатие кнопок
+        self.reg_search_button.clicked.connect(self.reg_search_button_clicked)
+        self.reg_insert_button.clicked.connect(self.reg_insert_button_clicked)
+        self.reg_update_button.clicked.connect(self.reg_update_button_clicked)
+        self.reg_delete_button.clicked.connect(self.reg_delete_button_clicked)
+        self.reg_reset_button.clicked.connect(self.reg_reset_button_clicked)
+
+        self.inter_search_button.clicked.connect(self.inter_search_button_clicked)
+        self.inter_insert_button.clicked.connect(self.inter_insert_button_clicked)
+        self.inter_update_button.clicked.connect(self.inter_update_button_clicked)
+        self.inter_delete_button.clicked.connect(self.inter_delete_button_clicked)
+        self.inter_reset_button.clicked.connect(self.inter_reset_button_clicked)
         
     def fill_regulatory_table(self, data):
         self.regulatory_table.setRowCount(len(data))
@@ -127,4 +148,105 @@ class DocumentsLayout(QWidget):
         if os.path.exists(file_path):
             os.startfile(file_path)
         else:
-            print(f"Файл не найден: {file_path}")
+            QMessageBox.warning(None, "Файл не найден", "Указанный путь не содержит файла")
+
+    def reg_search_button_clicked(self):
+        dialog = SearchRegulatoryDialog()
+        if dialog.exec_() == QDialog.Accepted:
+            search_params = dialog.get_search_params()
+            data = self.db.search_regulatory_documents(search_params)
+            self.regulatory_table.setRowCount(0)
+            if data:
+                self.fill_regulatory_table(data)
+
+    def reg_insert_button_clicked(self):
+        dialog = InsertRegulatoryDialog()
+        if dialog.exec_() == QDialog.Accepted:
+            data = dialog.get_data()
+            self.db.insert_regulatory_document(data)
+            self.regulatory_table.setRowCount(0)
+            self.fill_regulatory_table(self.db.get_regulatory_documents())
+
+    def reg_update_button_clicked(self):
+        row = self.regulatory_table.currentRow()
+        if row != -1:
+            to_update = self.regulatory_table.item(row, 0).text()
+            current = [i for i in self.db.get_regulatory_document_by_id(to_update)[0]]
+            dialog = UpdateRegulatoryDialog(current)
+            if dialog.exec_() == QDialog.Accepted:
+                data = dialog.get_data()
+                self.db.update_regulatory_document(data, to_update)
+                self.regulatory_table.setRowCount(0)
+                self.fill_regulatory_table(self.db.get_regulatory_documents())
+
+    def reg_delete_button_clicked(self):
+        row = self.regulatory_table.currentRow()
+        if row != -1:
+            to_delete = self.regulatory_table.item(row, 0).text()
+            self.db.delete_from_regulatory_documents(to_delete)
+            self.regulatory_table.removeRow(row)
+
+    def reg_reset_button_clicked(self):
+        self.regulatory_table.setRowCount(0)
+        self.fill_regulatory_table(self.db.get_regulatory_documents())
+
+    def inter_search_button_clicked(self):
+        dialog = SearchInternalDialog()
+        if dialog.exec_() == QDialog.Accepted:
+            search_params = dialog.get_search_params()
+            data = self.db.search_internal_documents(search_params)
+            self.internal_table.setRowCount(0)
+            if data:
+                self.fill_internal_table(data)
+
+    def inter_insert_button_clicked(self):
+        engineers = self.db.get_engineers_without_passwords()
+        dialog = InsertInternalDialog(engineers)
+        if dialog.exec_() == QDialog.Accepted:
+            data = dialog.get_data()
+
+            # Подпираем соответствующий ID добавившего
+            for engineer in engineers:
+                if data['responsible'] == engineer[1]:
+                    data['responsible'] = engineer[0]
+                    break
+
+            self.db.insert_internal_document(data)
+            self.internal_table.setRowCount(0)
+            self.fill_internal_table(self.db.get_internal_documents())
+
+    def inter_update_button_clicked(self):
+        row = self.internal_table.currentRow()
+        if row != -1:
+            # Собираем уже имеющиеся данные и передаем в диалоговое окно
+            to_update = self.internal_table.item(row, 0).text()
+            engineers = self.db.get_engineers_without_passwords()
+            current = [i for i in self.db.get_internal_document_by_id(to_update)[0]]
+
+            dialog = UpdateInternalDialog(current, engineers)
+            if dialog.exec_() == QDialog.Accepted:
+                data = dialog.get_data()
+
+                # Подпираем соответствующий ID добавившего
+                for engineer in engineers:
+                    if data['responsible'] == engineer[1]:
+                        data['responsible'] = engineer[0]
+                        break
+
+                self.db.update_internal_document(data, to_update)
+                self.internal_table.setRowCount(0)
+                self.fill_internal_table(self.db.get_internal_documents())
+
+    def inter_delete_button_clicked(self):
+        row = self.internal_table.currentRow()
+        if row != -1:
+            to_delete = self.internal_table.item(row, 0).text()
+            if int(to_delete) not in self.db.get_internal_documents_references():
+                self.db.delete_from_internal_documents(to_delete)
+                self.internal_table.removeRow(row)
+            else:
+                QMessageBox.warning(None, "Операция отклонена", "Есть внешние ссылки на удаляемый объект!")
+
+    def inter_reset_button_clicked(self):
+        self.internal_table.setRowCount(0)
+        self.fill_internal_table(self.db.get_internal_documents())

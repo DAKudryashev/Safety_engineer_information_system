@@ -51,6 +51,47 @@ class DataBase:
         ''')
         return self.curs.fetchall()
 
+    def get_regulatory_document_by_id(self, document_id):
+        self.curs.execute(f'''
+            SELECT
+                name,
+                to_char(creation_date, 'DD.MM.YYYY') as formatted_date,
+                url
+            FROM
+                regulatory_documents
+            WHERE document_id = {document_id}
+                ''')
+        return self.curs.fetchall()
+
+    def search_regulatory_documents(self, data):
+        self.curs.execute(f'''
+            SELECT
+                document_id, 
+                name,
+                to_char(creation_date, 'DD.MM.YYYY') as formatted_date,
+                url
+            FROM
+                regulatory_documents
+            WHERE
+                name LIKE '%{data['name']}%'
+                AND creation_date BETWEEN '{(data['date_from'])}' AND '{(data['date_to'])}'
+        ''')
+        return self.curs.fetchall()
+
+    def insert_regulatory_document(self, data):
+        self.curs.execute(f"INSERT INTO regulatory_documents(name, creation_date, url) "
+                          f"VALUES ('{data['name']}', DATE'{data['date']}', '{data['url']}')")
+
+    def update_regulatory_document(self, data, document_id):
+        self.curs.execute(f'''
+                    UPDATE regulatory_documents
+                    SET name = '{(data['name'])}', creation_date = DATE'{(data['date'])}', url = '{(data['url'])}'
+                    WHERE document_id = {document_id}
+                    ''')
+
+    def delete_from_regulatory_documents(self, document_id):
+        self.curs.execute(f"DELETE FROM regulatory_documents WHERE document_id = {document_id}")
+
     def get_internal_documents(self):
         self.curs.execute('''
             SELECT
@@ -65,6 +106,69 @@ class DataBase:
                 engineers e ON d.responsible = e.engineer_id
         ''')
         return self.curs.fetchall()
+
+    def get_internal_document_by_id(self, document_id):
+        self.curs.execute(f'''
+            SELECT
+                d.name AS document_name,
+                to_char(d.creation_date, 'DD.MM.YYYY') AS creation_date,
+                e.name AS engineer_name,
+                d.file_path
+            FROM
+                internal_documents d
+            JOIN
+                engineers e ON d.responsible = e.engineer_id
+            WHERE
+                d.internal_document_id = {document_id}
+        ''')
+        return self.curs.fetchall()
+
+    def get_internal_documents_references(self):
+        self.curs.execute('SELECT documentation FROM completed_briefings')
+        data = self.curs.fetchall()
+        self.curs.execute('SELECT documentation FROM planned_briefings')
+        data = list(data + self.curs.fetchall())
+        self.curs.execute('SELECT documentation FROM medical_examinations')
+        data = list(data + self.curs.fetchall())
+        self.curs.execute('SELECT documentation FROM examinations')
+        data = list(data + self.curs.fetchall())
+        return list(set(row[0] for row in data))
+
+    def search_internal_documents(self, data):
+        self.curs.execute(f'''
+            SELECT
+                d.internal_document_id,
+                d.name AS document_name,
+                to_char(d.creation_date, 'DD.MM.YYYY') AS creation_date,
+                e.name AS engineer_name,
+                d.file_path
+            FROM
+                internal_documents d
+            JOIN
+                engineers e ON d.responsible = e.engineer_id
+            WHERE
+                d.name LIKE '%{data['name']}%'
+                AND d.creation_date BETWEEN '{(data['date_from'])}' AND '{(data['date_to'])}'
+                AND e.name LIKE '%{data['responsible']}%'
+        ''')
+        return self.curs.fetchall()
+
+    def insert_internal_document(self, data):
+        self.curs.execute(f'''
+            INSERT INTO internal_documents(name, creation_date, responsible, file_path)
+            VALUES ('{data['name']}', DATE'{data['date']}', {data['responsible']}, '{data['file_path']}')
+        ''')
+
+    def update_internal_document(self, data, document_id):
+        self.curs.execute(f'''
+            UPDATE internal_documents
+            SET name = '{(data['name'])}', creation_date = DATE'{(data['date'])}',
+            responsible = {(data['responsible'])}, file_path = '{data['file_path']}'
+            WHERE internal_document_id = {document_id}
+        ''')
+
+    def delete_from_internal_documents(self, document_id):
+        self.curs.execute(f'DELETE FROM internal_documents WHERE internal_document_id = {document_id}')
 
     def get_rooms(self):
         self.curs.execute('''
@@ -85,22 +189,6 @@ class DataBase:
         self.curs.execute('SELECT location FROM equipment')
         return list(set(row[0] for row in self.curs.fetchall()))
 
-    def insert_room(self, data):
-        request = (f"INSERT INTO rooms(name, state, check_date, responsible) VALUES ('{(data[0])}',"
-                   f" '{(data[1])}', DATE'{(data[2])}', {(data[3])})")
-        print(request)
-        self.curs.execute(request)
-
-    def update_room(self, room_id, data):
-        self.curs.execute(f'''
-            UPDATE rooms
-            SET name = '{(data[0])}', state = '{(data[1])}', check_date = DATE'{(data[2])}', responsible = {(data[3])}
-            WHERE room_id = {room_id}
-            ''')
-
-    def delete_from_rooms(self, room_id):
-        self.curs.execute('DELETE FROM rooms WHERE room_id = ' + room_id)
-
     def search_rooms(self, data):
         self.curs.execute(f'''
             SELECT
@@ -120,6 +208,22 @@ class DataBase:
                 AND e.name LIKE '%{(data['responsible'])}%'
         ''')
         return self.curs.fetchall()
+
+    def insert_room(self, data):
+        request = (f"INSERT INTO rooms(name, state, check_date, responsible) VALUES ('{(data[0])}',"
+                   f" '{(data[1])}', DATE'{(data[2])}', {(data[3])})")
+        print(request)
+        self.curs.execute(request)
+
+    def update_room(self, room_id, data):
+        self.curs.execute(f'''
+            UPDATE rooms
+            SET name = '{(data[0])}', state = '{(data[1])}', check_date = DATE'{(data[2])}', responsible = {(data[3])}
+            WHERE room_id = {room_id}
+            ''')
+
+    def delete_from_rooms(self, room_id):
+        self.curs.execute('DELETE FROM rooms WHERE room_id = ' + room_id)
 
     def get_planned_briefings(self):
         self.curs.execute('''
@@ -504,4 +608,4 @@ if __name__ == '__main__':
     db2 = DataBase()
     print(db1 is db2)  # Должно вывести True - это один и тот же объект
 
-    print(db1.get_employees_references())
+    print(db1.get_internal_documents_references())
