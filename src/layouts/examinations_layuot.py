@@ -1,7 +1,11 @@
 import os
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLabel, QHBoxLayout, QTableWidget,
-                             QPushButton, QTableWidgetItem, QSizePolicy, QMessageBox)
+                             QPushButton, QTableWidgetItem, QSizePolicy, QMessageBox, QDialog)
 from PyQt5.QtCore import Qt
+
+from src.dialogs.examinations.insert_examination_dialog import InsertExamDialog
+from src.dialogs.examinations.search_examination_dialog import SearchExamDialog
+from src.dialogs.examinations.update_examination_dialog import UpdateExamDialog
 
 
 class ExaminationsLayout(QWidget):
@@ -53,11 +57,11 @@ class ExaminationsLayout(QWidget):
         self.setLayout(layout)
 
         # Отслеживаем нажатие кнопок
-        # self.exams_search_button.clicked.connect()
-        # self.exams_insert_button.clicked.connect()
-        # self.exams_update_button.clicked.connect()
-        # self.exams_delete_button.clicked.connect()
-        # self.exams_reset_button.clicked.connect()
+        self.exams_search_button.clicked.connect(self.exams_search_button_clicked)
+        self.exams_insert_button.clicked.connect(self.exams_insert_button_clicked)
+        self.exams_update_button.clicked.connect(self.exams_update_button_clicked)
+        self.exams_delete_button.clicked.connect(self.exams_delete_button_clicked)
+        self.exams_reset_button.clicked.connect(self.exams_reset_button_clicked)
         
     def fill_exams_table(self, data):
         self.exams_table.setRowCount(len(data))
@@ -96,3 +100,84 @@ class ExaminationsLayout(QWidget):
             os.startfile(file_path)
         else:
             QMessageBox.warning(None, "Файл не найден", "Указанный путь не содержит файла")
+
+    def exams_search_button_clicked(self):
+        dialog = SearchExamDialog()
+        if dialog.exec_() == QDialog.Accepted:
+            search_params = dialog.get_search_params()
+            data = self.db.search_examinations(search_params)
+            self.exams_table.setRowCount(0)
+            if data:
+                self.fill_exams_table(data)
+
+    def exams_insert_button_clicked(self):
+        engineers = self.db.get_engineers_without_passwords()
+        documents = self.db.get_internal_documents()
+        dialog = InsertExamDialog(engineers, documents)
+        if dialog.exec_() == QDialog.Accepted:
+            data = dialog.get_data()
+
+            # Подбираем соответствующий ID документа
+            for document in documents:
+                if document[1] == data['document']:
+                    data['document'] = document[0]
+                    break
+
+            # Подбираем соответствующий ID инженера
+            for engineer in engineers:
+                if engineer[1] == data['responsible']:
+                    data['responsible'] = engineer[0]
+                    break
+
+            self.db.insert_examination(data)
+            self.exams_table.setRowCount(0)
+            self.fill_exams_table(self.db.get_examinations())
+
+    def exams_update_button_clicked(self):
+        row = self.exams_table.currentRow()
+        if row != -1:
+            # Собираем уже имеющиеся данные и передаем в диалоговое окно
+            to_update = self.exams_table.item(row, 0).text()
+            current = [i for i in self.db.get_examination_by_id(to_update)[0]]
+            engineers = self.db.get_engineers_without_passwords()
+            documents = self.db.get_internal_documents()
+
+            # Находим соответствующий ссылке документ
+            for document in documents:
+                if current[4] == document[4]:
+                    current[4] = document[1]
+                    break
+
+            dialog = UpdateExamDialog(current, engineers, documents)
+            if dialog.exec_() == QDialog.Accepted:
+                data = dialog.get_data()
+
+                # Подбираем соответствующий ID документа
+                for document in documents:
+                    if document[1] == data['document']:
+                        data['document'] = document[0]
+                        break
+
+                # Подбираем соответствующий ID инженера
+                for engineer in engineers:
+                    if engineer[1] == data['responsible']:
+                        data['responsible'] = engineer[0]
+                        break
+
+                self.db.update_examination(data, to_update)
+                self.exams_table.setRowCount(0)
+                self.fill_exams_table(self.db.get_examinations())
+
+    def exams_delete_button_clicked(self):
+        row = self.exams_table.currentRow()
+        if row != -1:
+            to_delete = self.exams_table.item(row, 0).text()
+            if int(to_delete) not in self.db.get_examinations_references():
+                self.db.delete_from_examinations(to_delete)
+                self.exams_table.removeRow(row)
+            else:
+                QMessageBox.warning(None, "Операция отклонена", "Есть внешние ссылки на удаляемый объект!")
+
+    def exams_reset_button_clicked(self):
+        self.exams_table.setRowCount(0)
+        self.fill_exams_table(self.db.get_examinations())
