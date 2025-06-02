@@ -504,6 +504,63 @@ class DataBase:
         ''')
         return self.curs.fetchall()
 
+    def get_med_examination_by_id(self, examination_id):
+        self.curs.execute(f'''
+            SELECT
+                e.name,
+                to_char(e.date, 'DD.MM.YYYY') AS date,
+                e.results,
+                d.file_path
+            FROM
+                medical_examinations e
+            JOIN
+                internal_documents d ON e.documentation = d.internal_document_id
+            WHERE
+                e.medical_examination_id = {examination_id}
+        ''')
+        return self.curs.fetchall()
+
+    def get_med_examinations_references(self):
+        self.curs.execute('SELECT med_examination FROM employees')
+        return list(set(row[0] for row in self.curs.fetchall()))
+
+    def search_med_examinations(self, data):
+        self.curs.execute(f'''
+            SELECT
+                e.medical_examination_id,
+                e.name,
+                to_char(e.date, 'DD.MM.YYYY') AS date,
+                e.results,
+                d.file_path
+            FROM
+                medical_examinations e
+            JOIN
+                internal_documents d ON e.documentation = d.internal_document_id
+            WHERE
+                e.name LIKE '%{data['name']}%'
+                AND e.date BETWEEN '{(data['date_from'])}' AND '{(data['date_to'])}'
+                AND e.results LIKE '%{data['results']}%'
+        ''')
+        return self.curs.fetchall()
+
+    def insert_med_examination(self, data):
+        self.curs.execute(f'''
+                    INSERT INTO medical_examinations(name, date, results, documentation)
+                    VALUES ('{data['name']}', DATE'{data['date']}',
+                    '{data['results']}', {data['document']})
+                ''')
+
+    def update_med_examination(self, data, examination_id):
+        self.curs.execute(f'''
+                    UPDATE medical_examinations
+                    SET name = '{data['name']}', date = DATE'{data['date']}',
+                    results = '{data['results']}', documentation = {data['document']}
+                    WHERE medical_examination_id = {examination_id}
+                ''')
+
+    def delete_from_med_examinations(self, examination_id):
+        self.curs.execute(f'DELETE FROM medical_examinations WHERE medical_examination_id = {examination_id}')
+
     def get_employees(self):
         self.curs.execute('''
             SELECT
@@ -672,4 +729,4 @@ if __name__ == '__main__':
     db2 = DataBase()
     print(db1 is db2)  # Должно вывести True - это один и тот же объект
 
-    print(db1.get_examinations_references())
+    print(db1.get_med_examinations_references())

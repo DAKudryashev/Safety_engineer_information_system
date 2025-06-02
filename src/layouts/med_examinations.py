@@ -1,7 +1,11 @@
 import os
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLabel, QHBoxLayout, QTableWidget,
-                             QPushButton, QTableWidgetItem, QSizePolicy, QMessageBox)
+                             QPushButton, QTableWidgetItem, QSizePolicy, QMessageBox, QDialog)
 from PyQt5.QtCore import Qt
+
+from src.dialogs.med_examinations.insert_med_examination_dialog import InsertMedExamDialog
+from src.dialogs.med_examinations.search_med_examination_dialog import SearchMedExamDialog
+from src.dialogs.med_examinations.update_med_examination_dialog import UpdateMedExamDialog
 
 
 class MedExaminationsLayout(QWidget):
@@ -27,7 +31,7 @@ class MedExaminationsLayout(QWidget):
         self.med_exams_insert_button = QPushButton('Добавить')
         self.med_exams_update_button = QPushButton('Изменить')
         self.med_exams_delete_button = QPushButton('Удалить')
-        self.med_exams_reset_button = QPushButton('Сбросить')
+        self.med_exams_reset_button = QPushButton('Обновить')
         self.med_exams_search_button.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.med_exams_insert_button.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.med_exams_update_button.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
@@ -51,6 +55,13 @@ class MedExaminationsLayout(QWidget):
 
         # Закрепление слоя на вкладке
         self.setLayout(layout)
+
+        # Отслеживаем нажатие на кнопки
+        self.med_exams_search_button.clicked.connect(self.med_exams_search_button_clicked)
+        self.med_exams_insert_button.clicked.connect(self.med_exams_insert_button_clicked)
+        self.med_exams_update_button.clicked.connect(self.med_exams_update_button_clicked)
+        self.med_exams_delete_button.clicked.connect(self.med_exams_delete_button_clicked)
+        self.med_exams_reset_button.clicked.connect(self.med_exams_reset_button_clicked)
 
     def fill_med_exams_table(self, data):
         self.med_exams_table.setRowCount(len(data))
@@ -88,3 +99,72 @@ class MedExaminationsLayout(QWidget):
             os.startfile(file_path)
         else:
             QMessageBox.warning(None, "Файл не найден", "Указанный путь не содержит файла")
+
+    def med_exams_search_button_clicked(self):
+        dialog = SearchMedExamDialog()
+        if dialog.exec_() == QDialog.Accepted:
+            search_params = dialog.get_search_params()
+            data = self.db.search_med_examinations(search_params)
+            self.med_exams_table.setRowCount(0)
+            if data:
+                self.fill_med_exams_table(data)
+
+    def med_exams_insert_button_clicked(self):
+        documents = self.db.get_internal_documents()
+        dialog = InsertMedExamDialog(documents)
+        if dialog.exec_() == QDialog.Accepted:
+            data = dialog.get_data()
+
+            # Подбираем соответствующий ID документа
+            for document in documents:
+                if document[1] == data['document']:
+                    data['document'] = document[0]
+                    break
+
+            self.db.insert_med_examination(data)
+            self.med_exams_table.setRowCount(0)
+            self.fill_med_exams_table(self.db.get_med_examinations())
+
+    def med_exams_update_button_clicked(self):
+        row = self.med_exams_table.currentRow()
+        if row != -1:
+            # Собираем уже имеющиеся данные и передаем в диалоговое окно
+            to_update = self.med_exams_table.item(row, 0).text()
+            current = [i for i in self.db.get_med_examination_by_id(to_update)[0]]
+            documents = self.db.get_internal_documents()
+
+            # Находим соответствующий ссылке документ
+            for document in documents:
+                if current[3] == document[4]:
+                    current[3] = document[1]
+                    break
+
+            print(current)
+
+            dialog = UpdateMedExamDialog(current, documents)
+            if dialog.exec_() == QDialog.Accepted:
+                data = dialog.get_data()
+
+                # Подбираем соответствующий ID документа
+                for document in documents:
+                    if document[1] == data['document']:
+                        data['document'] = document[0]
+                        break
+
+                self.db.update_med_examination(data, to_update)
+                self.med_exams_table.setRowCount(0)
+                self.fill_med_exams_table(self.db.get_med_examinations())
+
+    def med_exams_delete_button_clicked(self):
+        row = self.med_exams_table.currentRow()
+        if row != -1:
+            to_delete = self.med_exams_table.item(row, 0).text()
+            if int(to_delete) not in self.db.get_med_examinations_references():
+                self.db.delete_from_med_examinations(to_delete)
+                self.med_exams_table.removeRow(row)
+            else:
+                QMessageBox.warning(None, "Операция отклонена", "Есть внешние ссылки на удаляемый объект!")
+
+    def med_exams_reset_button_clicked(self):
+        self.med_exams_table.setRowCount(0)
+        self.fill_med_exams_table(self.db.get_med_examinations())
