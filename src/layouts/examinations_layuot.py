@@ -1,6 +1,6 @@
 import os
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLabel, QHBoxLayout, QTableWidget,
-                             QPushButton, QTableWidgetItem, QSizePolicy)
+                             QPushButton, QTableWidgetItem, QSizePolicy, QMessageBox)
 from PyQt5.QtCore import Qt
 
 
@@ -27,7 +27,7 @@ class ExaminationsLayout(QWidget):
         self.exams_insert_button = QPushButton('Добавить')
         self.exams_update_button = QPushButton('Изменить')
         self.exams_delete_button = QPushButton('Удалить')
-        self.exams_reset_button = QPushButton('Сбросить')
+        self.exams_reset_button = QPushButton('Обновить')
         self.exams_search_button.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.exams_insert_button.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.exams_update_button.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
@@ -51,6 +51,13 @@ class ExaminationsLayout(QWidget):
 
         # Закрепление слоя на вкладке
         self.setLayout(layout)
+
+        # Отслеживаем нажатие кнопок
+        # self.exams_search_button.clicked.connect()
+        # self.exams_insert_button.clicked.connect()
+        # self.exams_update_button.clicked.connect()
+        # self.exams_delete_button.clicked.connect()
+        # self.exams_reset_button.clicked.connect()
         
     def fill_exams_table(self, data):
         self.exams_table.setRowCount(len(data))
@@ -88,4 +95,4 @@ class ExaminationsLayout(QWidget):
         if os.path.exists(file_path):
             os.startfile(file_path)
         else:
-            print(f"Файл не найден: {file_path}")
+            QMessageBox.warning(None, "Файл не найден", "Указанный путь не содержит файла")

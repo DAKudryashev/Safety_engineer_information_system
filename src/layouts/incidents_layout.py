@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLabel, QHBoxLayout, QTableWidget,
-                             QPushButton, QTableWidgetItem, QSizePolicy)
+                             QPushButton, QTableWidgetItem, QSizePolicy, QMessageBox)
 from PyQt5.QtCore import Qt
 import os
 
@@ -87,4 +87,4 @@ class IncidentsLayout(QWidget):
         if os.path.exists(file_path):
             os.startfile(file_path)
         else:
-            print(f"Файл не найден: {file_path}")
+            QMessageBox.warning(None, "Файл не найден", "Указанный путь не содержит файла")

@@ -157,7 +157,7 @@ class BriefingsLayout(QWidget):
         if os.path.exists(file_path):
             os.startfile(file_path)
         else:
-            print(f"Файл не найден: {file_path}")
+            QMessageBox.warning(None, "Файл не найден", "Указанный путь не содержит файла")
 
     def planned_search_button_clicked(self):
         dialog = SearchPlannedDialog()
