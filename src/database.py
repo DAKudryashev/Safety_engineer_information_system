@@ -686,6 +686,71 @@ class DataBase:
         ''')
         return self.curs.fetchall()
 
+    def get_equipment_by_id(self, equipment_id):
+        self.curs.execute(f'''
+            SELECT
+                e.name,
+                r.name,
+                e.supplier,
+                to_char(e.manufacture_date, 'DD.MM.YYYY') AS manufacture_date,
+                to_char(e.sell_by_date, 'DD.MM.YYYY') AS sell_by_date,
+                eng.name
+            FROM
+                equipment e
+            JOIN
+                rooms r ON e.location = r.room_id
+            JOIN
+                engineers eng ON e.responsible = eng.engineer_id
+            WHERE
+                e.equipment_id = {equipment_id}
+        ''')
+        return self.curs.fetchall()
+
+    def search_equipment(self, data):
+        self.curs.execute(f'''
+            SELECT
+                e.equipment_id,
+                e.name,
+                r.name,
+                e.supplier,
+                to_char(e.manufacture_date, 'DD.MM.YYYY') AS manufacture_date,
+                to_char(e.sell_by_date, 'DD.MM.YYYY') AS sell_by_date,
+                eng.name
+            FROM
+                equipment e
+            JOIN
+                rooms r ON e.location = r.room_id
+            JOIN
+                engineers eng ON e.responsible = eng.engineer_id
+            WHERE
+                e.name LIKE '%{data['equipment_name']}%'
+                AND r.name LIKE '%{data['room']}%'
+                AND e.supplier LIKE '%{data['supplier']}%'
+                AND e.manufacture_date BETWEEN '{(data['manufacture_from'])}' AND '{(data['manufacture_to'])}'
+                AND e.sell_by_date BETWEEN '{(data['expiry_from'])}' AND '{(data['expiry_to'])}'
+                AND eng.name LIKE '%{data['responsible']}%'
+        ''')
+        return self.curs.fetchall()
+
+    def insert_equipment(self, data):
+        self.curs.execute(f'''
+            INSERT INTO equipment(name, location, supplier, manufacture_date, sell_by_date, responsible)
+            VALUES ('{data['name']}', {data['room']}, '{data['supplier']}', DATE'{data['manufacture_date']}',
+            DATE'{data['expiry_date']}', {data['responsible']})
+        ''')
+
+    def update_equipment(self, data, equipment_id):
+        self.curs.execute(f'''
+            UPDATE equipment
+            SET name = '{data['name']}', location = {data['room']}, supplier = '{data['supplier']}',
+            manufacture_date = DATE'{data['manufacture_date']}', sell_by_date = DATE'{data['expiry_date']}',
+            responsible = {data['responsible']}
+            WHERE equipment_id = {equipment_id}
+        ''')
+
+    def delete_from_equipment(self, equipment_id):
+        self.curs.execute(f'DELETE FROM equipment WHERE equipment_id = {equipment_id}')
+
     def get_incidents(self):
         self.curs.execute('''
             SELECT

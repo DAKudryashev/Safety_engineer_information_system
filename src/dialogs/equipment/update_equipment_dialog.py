@@ -3,15 +3,15 @@ from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QFormLayout,
 from PyQt5.QtCore import QDate, Qt
 
 
-class UpdateExamDialog(QDialog):
-    def __init__(self, current, engineers, documents, parent=None):
+class UpdateEquipmentDialog(QDialog):
+    def __init__(self, current, rooms, engineers, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Изменить экзамен")
-        self.setFixedSize(500, 400)
+        self.setWindowTitle("Изменить оборудование")
+        self.setFixedSize(500, 450)
 
         # Подготовка данных для ComboBox
+        self.rooms = [item[1] for item in rooms]
         self.engineers = [item[1] for item in engineers][1:]
-        self.documents = [item[1] for item in documents]
 
         # Стилизация (сохраняем единый стиль)
         self.setStyleSheet("""
@@ -60,44 +60,40 @@ class UpdateExamDialog(QDialog):
 
         # Элементы формы
         self.name_input = QLineEdit()
-        self.name_input.setPlaceholderText("Введите наименование")
+        self.name_input.setPlaceholderText("Введите наименование оборудования")
         self.name_input.setText(current[0])
 
-        # Виджет выбора даты
-        self.date_edit = QDateEdit()
-        self.date_edit.setDisplayFormat("dd.MM.yyyy")
-        self.date_edit.setCalendarPopup(True)
-        date = QDate.fromString(current[1], "dd.MM.yyyy")
-        self.date_edit.setDate(date)
+        # Выпадающий список с местоположением
+        self.room_combo = QComboBox()
+        self.room_combo.addItems(self.rooms)
+        index = self.room_combo.findText(current[1])
+        if self.rooms:
+            self.room_combo.setCurrentIndex(index)
+
+        self.supplier_input = QLineEdit()
+        self.supplier_input.setPlaceholderText("Введите поставщика")
+        self.supplier_input.setText(current[2])
+
+        # Виджеты выбора даты
+        self.manufacture_date_edit = QDateEdit()
+        self.manufacture_date_edit.setDisplayFormat("dd.MM.yyyy")
+        self.manufacture_date_edit.setCalendarPopup(True)
+        data = QDate.fromString(current[3], "dd.MM.yyyy")
+        self.manufacture_date_edit.setDate(data)
+
+        self.expiry_date_edit = QDateEdit()
+        self.expiry_date_edit.setDisplayFormat("dd.MM.yyyy")
+        self.expiry_date_edit.setCalendarPopup(True)
+        data = QDate.fromString(current[4], "dd.MM.yyyy")
+        self.expiry_date_edit.setDate(data)
 
         # Выпадающий список с ответственными
         self.responsible_combo = QComboBox()
         self.responsible_combo.addItems(self.engineers)
-        index = self.responsible_combo.findText(current[2])
+        index = self.responsible_combo.findText(current[5])
         if self.engineers:
             self.responsible_combo.setCurrentIndex(index)
         self.responsible_combo.view().setMinimumWidth(300)
-
-        # Поле для результатов (ограничение 32 символа)
-        self.results_input = QLineEdit()
-        self.results_input.setPlaceholderText("Введите результаты")
-        self.results_input.setMaxLength(32)
-        self.results_input.setText(current[3])
-
-        # Выпадающий список с документами
-        self.document_combo = QComboBox()
-        self.document_combo.addItems(self.documents)
-        index = self.document_combo.findText(current[4])
-        if self.documents:
-            self.document_combo.setCurrentIndex(index)
-
-        # Получаем ширину самого широкого элемента
-        fm = self.document_combo.fontMetrics()
-        max_width = max(fm.width(text) for text in [self.document_combo.itemText(i)
-                                                    for i in range(self.document_combo.count())])
-
-        # Устанавливаем ширину с небольшим запасом
-        self.document_combo.view().setMinimumWidth(max_width + 50)
 
         # Надпись об ошибке
         self.error_label = QLabel()
@@ -120,10 +116,11 @@ class UpdateExamDialog(QDialog):
         form_layout.setContentsMargins(20, 20, 20, 10)
 
         form_layout.addRow("Наименование:", self.name_input)
-        form_layout.addRow("Дата проведения:", self.date_edit)
+        form_layout.addRow("Местоположение:", self.room_combo)
+        form_layout.addRow("Поставщик:", self.supplier_input)
+        form_layout.addRow("Дата изготовления:", self.manufacture_date_edit)
+        form_layout.addRow("Годен до:", self.expiry_date_edit)
         form_layout.addRow("Ответственный:", self.responsible_combo)
-        form_layout.addRow("Результаты:", self.results_input)
-        form_layout.addRow("Документация:", self.document_combo)
 
         button_layout = QHBoxLayout()
         button_layout.addStretch()
@@ -141,9 +138,15 @@ class UpdateExamDialog(QDialog):
     def validate_form(self):
         """Проверяет заполнение всех обязательных полей"""
         if (not self.name_input.text().strip() or
-                not self.results_input.text().strip() or
-                not (self.engineers and self.responsible_combo.currentText()) or
-                not (self.documents and self.document_combo.currentText())):
+                not self.supplier_input.text().strip() or
+                not (self.rooms and self.room_combo.currentText()) or
+                not (self.engineers and self.responsible_combo.currentText())):
+            self.error_label.show()
+            return
+
+        # Проверка, что дата "годен до" не раньше даты изготовления
+        if self.manufacture_date_edit.date() > self.expiry_date_edit.date():
+            self.error_label.setText("Дата 'Годен до' не может быть раньше даты изготовления!")
             self.error_label.show()
             return
 
@@ -154,8 +157,9 @@ class UpdateExamDialog(QDialog):
         """Возвращает введенные данные в структурированном виде"""
         return {
             'name': self.name_input.text().strip(),
-            'date': self.date_edit.date().toString("yyyy-MM-dd"),
-            'responsible': self.responsible_combo.currentText(),
-            'results': self.results_input.text().strip(),
-            'document': self.document_combo.currentText()
+            'room': self.room_combo.currentText(),
+            'supplier': self.supplier_input.text().strip(),
+            'manufacture_date': self.manufacture_date_edit.date().toString("yyyy-MM-dd"),
+            'expiry_date': self.expiry_date_edit.date().toString("yyyy-MM-dd"),
+            'responsible': self.responsible_combo.currentText()
         }
