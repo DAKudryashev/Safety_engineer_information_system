@@ -854,6 +854,67 @@ class DataBase:
         ''')
         return self.curs.fetchall()
 
+    def get_complaint_by_id(self, complaint_id):
+        self.curs.execute(f'''
+            SELECT
+                emp.name,
+                c.content,
+                to_char(c.date, 'DD.MM.YYYY') AS date,
+                c.status,
+                e.name
+            FROM
+                complaints c
+            JOIN
+                employees emp ON c.by=emp.employee_id
+            JOIN
+                engineers e ON c.responsible = e.engineer_id
+            WHERE
+                c.complaint_id = {complaint_id}        
+        ''')
+        return self.curs.fetchall()
+
+    def search_complaints(self, data):
+        self.curs.execute(f'''
+            SELECT
+                c.complaint_id,
+                emp.name,
+                c.content,
+                to_char(c.date, 'DD.MM.YYYY') AS date,
+                c.status,
+                e.name
+            FROM
+                complaints c
+            JOIN
+                employees emp ON c.by=emp.employee_id
+            JOIN
+                engineers e ON c.responsible = e.engineer_id
+            WHERE
+                emp.name LIKE '%{data['author']}%'
+                AND c.content LIKE '%{data['content']}%'
+                AND c.date BETWEEN '{data['date_from']}' AND '{data['date_to']}'
+                AND c.status LIKE '%{data['status']}%'
+                AND e.name LIKE '%{data['responsible']}%'
+        ''')
+        return self.curs.fetchall()
+
+    def insert_complaint(self, data):
+        self.curs.execute(f'''
+            INSERT INTO complaints(by, content, date, status, responsible)
+            VALUES ({data['author']}, '{data['content']}', DATE'{data['date']}',
+            '{data['status']}', {data['responsible']})
+        ''')
+
+    def update_complaint(self, data, complaint_id):
+        self.curs.execute(f'''
+            UPDATE complaints
+            SET by = {data['author']}, content = '{data['content']}', date = DATE'{data['date']}',
+            status = '{data['status']}', responsible = {data['responsible']}
+            WHERE complaint_id = {complaint_id} 
+        ''')
+
+    def delete_from_complaints(self, complaint_id):
+        self.curs.execute(f'DELETE FROM complaints WHERE complaint_id = {complaint_id}')
+
 
 if __name__ == '__main__':
     # Тестирование Singleton

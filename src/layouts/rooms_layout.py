@@ -30,7 +30,7 @@ class RoomsLayout(QWidget):
         self.rooms_insert_button = QPushButton('Добавить')
         self.rooms_update_button = QPushButton('Изменить')
         self.rooms_delete_button = QPushButton('Удалить')
-        self.rooms_reset_button = QPushButton('Сбросить')
+        self.rooms_reset_button = QPushButton('Обновить')
         self.rooms_search_button.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.rooms_insert_button.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.rooms_update_button.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
