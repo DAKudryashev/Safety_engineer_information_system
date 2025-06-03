@@ -1,7 +1,11 @@
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLabel, QHBoxLayout, QTableWidget,
-                             QPushButton, QTableWidgetItem, QSizePolicy, QMessageBox)
+                             QPushButton, QTableWidgetItem, QSizePolicy, QMessageBox, QDialog)
 from PyQt5.QtCore import Qt
 import os
+
+from src.dialogs.incidents.insert_incident_dialog import InsertIncidentDialog
+from src.dialogs.incidents.search_incident_dialog import SearchIncidentDialog
+from src.dialogs.incidents.update_incident_dialog import UpdateIncidentDialog
 
 
 class IncidentsLayout(QWidget):
@@ -27,7 +31,7 @@ class IncidentsLayout(QWidget):
         self.incidents_insert_button = QPushButton('Добавить')
         self.incidents_update_button = QPushButton('Изменить')
         self.incidents_delete_button = QPushButton('Удалить')
-        self.incidents_reset_button = QPushButton('Сбросить')
+        self.incidents_reset_button = QPushButton('Обновить')
         self.incidents_search_button.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.incidents_insert_button.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.incidents_update_button.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
@@ -48,6 +52,13 @@ class IncidentsLayout(QWidget):
 
         # Закрепление слоя на вкладке
         self.setLayout(layout)
+
+        # Отслеживаем нажатие кнопок
+        self.incidents_search_button.clicked.connect(self.incidents_search_button_clicked)
+        self.incidents_insert_button.clicked.connect(self.incidents_insert_button_clicked)
+        self.incidents_update_button.clicked.connect(self.incidents_update_button_clicked)
+        self.incidents_delete_button.clicked.connect(self.incidents_delete_button_clicked)
+        self.incidents_reset_button.clicked.connect(self.incidents_reset_button_clicked)
 
     def fill_incidents_table(self, data):
         self.incidents_table.setRowCount(len(data))
@@ -88,3 +99,71 @@ class IncidentsLayout(QWidget):
             os.startfile(file_path)
         else:
             QMessageBox.warning(None, "Файл не найден", "Указанный путь не содержит файла")
+
+    def incidents_search_button_clicked(self):
+        dialog = SearchIncidentDialog()
+        if dialog.exec_() == QDialog.Accepted:
+            search_params = dialog.get_search_params()
+            data = self.db.search_incidents(search_params)
+            self.incidents_table.setRowCount(0)
+            if data:
+                self.fill_incidents_table(data)
+
+    def incidents_insert_button_clicked(self):
+        engineers = self.db.get_engineers()
+        employees = self.db.get_employees()
+        dialog = InsertIncidentDialog(engineers, employees)
+        if dialog.exec_() == QDialog.Accepted:
+            data = dialog.get_data()
+
+            for engineer in engineers:
+                if engineer[1] == data['responsible']:
+                    data['responsible'] = engineer[0]
+                    break
+
+            if data['participant']:
+                for employee in employees:
+                    if employee[1] == data['participant']:
+                        data['participant'] = employee[0]
+                        break
+
+            self.db.insert_incident(data)
+            self.incidents_table.setRowCount(0)
+            self.fill_incidents_table(self.db.get_incidents())
+
+    def incidents_update_button_clicked(self):
+        row = self.incidents_table.currentRow()
+        if row != -1:
+            to_update = self.incidents_table.item(row, 0).text()
+            engineers = self.db.get_engineers()
+            employees = self.db.get_employees()
+            current = [i if i else '' for i in self.db.get_incident_by_id(to_update)[0]]
+            dialog = UpdateIncidentDialog(current, engineers, employees)
+            if dialog.exec_() == QDialog.Accepted:
+                data = dialog.get_data()
+
+                for engineer in engineers:
+                    if engineer[1] == data['responsible']:
+                        data['responsible'] = engineer[0]
+                        break
+
+                if data['participant']:
+                    for employee in employees:
+                        if employee[1] == data['participant']:
+                            data['participant'] = employee[0]
+                            break
+
+                self.db.update_incident(data, to_update)
+                self.incidents_table.setRowCount(0)
+                self.fill_incidents_table(self.db.get_incidents())
+
+    def incidents_delete_button_clicked(self):
+        row = self.incidents_table.currentRow()
+        if row != -1:
+            to_delete = self.incidents_table.item(row, 0).text()
+            self.db.delete_from_incidents(to_delete)
+            self.incidents_table.removeRow(row)
+
+    def incidents_reset_button_clicked(self):
+        self.incidents_table.setRowCount(0)
+        self.fill_incidents_table(self.db.get_incidents())

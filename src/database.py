@@ -769,6 +769,73 @@ class DataBase:
         ''')
         return self.curs.fetchall()
 
+    def get_incident_by_id(self, incident_id):
+        self.curs.execute(f'''
+            SELECT
+                i.content,
+                to_char(i.date, 'DD.MM.YYYY') AS date,
+                e.name,
+                emp.name,
+                i.proof_path
+            FROM
+                incidents i
+            LEFT JOIN
+                engineers e ON i.responsible = e.engineer_id
+            LEFT JOIN
+                employees emp ON i.participant = emp.employee_id
+            WHERE
+                 i.incident_id = {incident_id}
+        ''')
+        return self.curs.fetchall()
+
+    def search_incidents(self, data):
+        request = f'''
+            SELECT
+                i.incident_id,
+                i.content,
+                to_char(i.date, 'DD.MM.YYYY') AS date,
+                e.name,
+                emp.name,
+                i.proof_path
+            FROM
+                incidents i
+            LEFT JOIN
+                engineers e ON i.responsible = e.engineer_id
+            LEFT JOIN
+                employees emp ON i.participant = emp.employee_id
+            WHERE
+                i.content LIKE '%{data['content']}%'
+                AND i.date BETWEEN '{(data['date_from'])}' AND '{(data['date_to'])}'
+                AND e.name LIKE '%{data['responsible']}%'         
+        '''
+        if data['participant']:
+            request += f'''
+                AND emp.name LIKE '%{data['participant']}%' '''
+
+        self.curs.execute(request)
+        return self.curs.fetchall()
+
+    def insert_incident(self, data):
+        self.curs.execute(f'''
+            INSERT INTO incidents(content, date, responsible, participant, proof_path)
+            VALUES('{data['content']}', DATE'{data['incident_date']}', {data['responsible']},
+            {(data['participant'] if data['participant'] else 'NULL')},
+            {("'" + data['photo_path'] + "'") if data['photo_path'] else 'NULL'})
+        ''')
+
+    def update_incident(self, data, incident_id):
+        self.curs.execute(f'''
+            UPDATE incidents
+            SET content = '{data['content']}', date = DATE'{data['incident_date']}',
+            responsible = {data['responsible']},
+            participant = {data['participant'] if data['participant'] else 'NULL'},
+            proof_path = {("'" + data['photo_path'] + "'") if data['photo_path'] else 'NULL'}
+            WHERE incident_id = {incident_id}
+        ''')
+
+    def delete_from_incidents(self, incident_id):
+        self.curs.execute(f'DELETE FROM incidents WHERE incident_id = {incident_id}')
+
     def get_complaints(self):
         self.curs.execute('''
             SELECT
