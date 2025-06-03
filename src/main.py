@@ -97,16 +97,6 @@ class InformationSys(QMainWindow):
         # Реализуем закрытие окна
         self.tab10.escape_button.clicked.connect(self.exit_app)
 
-        print(self.db is self.tab1.db)
-        print(self.db is self.tab2.db)
-        print(self.db is self.tab3.db)
-        print(self.db is self.tab4.db)
-        print(self.db is self.tab5.db)
-        print(self.db is self.tab6.db)
-        print(self.db is self.tab7.db)
-        print(self.db is self.tab8.db)
-        print(self.db is self.tab9.db)
-
     def authenticate(self):
         """Проверка учетных данных"""
         username = self.login_dialog.username_input.text().strip()

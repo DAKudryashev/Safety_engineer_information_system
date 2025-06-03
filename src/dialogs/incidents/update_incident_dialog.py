@@ -7,7 +7,7 @@ from PyQt5.QtCore import QDate, Qt
 class UpdateIncidentDialog(QDialog):
     def __init__(self, current, engineers, employees, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Добавить инцидент")
+        self.setWindowTitle("Изменить инцидент")
         self.setFixedSize(700, 450)
 
         # Подготовка данных
@@ -108,7 +108,7 @@ class UpdateIncidentDialog(QDialog):
         self.error_label.hide()
 
         # Кнопки
-        self.submit_btn = QPushButton("Добавить")
+        self.submit_btn = QPushButton("Сохранить")
         self.submit_btn.clicked.connect(self.validate_form)
 
         self.cancel_btn = QPushButton("Отмена")

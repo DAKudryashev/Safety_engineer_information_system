@@ -6,7 +6,7 @@ from PyQt5.QtCore import QDate, Qt
 class UpdateComplaintDialog(QDialog):
     def __init__(self, current, employees, engineers, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Добавить жалобу")
+        self.setWindowTitle("Изменить жалобу")
         self.setFixedSize(600, 400)
 
         # Подготовка данных
@@ -91,10 +91,10 @@ class UpdateComplaintDialog(QDialog):
         self.error_label.setObjectName("errorLabel")
         self.error_label.setAlignment(Qt.AlignCenter)
         self.error_label.hide()
-        self.error_label.setText("Заполните все обязательные поля")
+        self.error_label.setText("Заполните все поля!")
 
         # Кнопки (без изменений)
-        self.submit_btn = QPushButton("Добавить")
+        self.submit_btn = QPushButton("Сохранить")
         self.submit_btn.clicked.connect(self.validate_form)
 
         self.cancel_btn = QPushButton("Отмена")
@@ -106,11 +106,11 @@ class UpdateComplaintDialog(QDialog):
         form_layout.setSpacing(15)
         form_layout.setContentsMargins(20, 20, 20, 10)
 
-        form_layout.addRow("Автор*:", self.author_combo)
-        form_layout.addRow("Содержание*:", self.content_input)
-        form_layout.addRow("Дата*:", self.date_edit)
-        form_layout.addRow("Статус*:", self.status_input)
-        form_layout.addRow("Ответственный*:", self.responsible_combo)
+        form_layout.addRow("Автор:", self.author_combo)
+        form_layout.addRow("Содержание:", self.content_input)
+        form_layout.addRow("Дата:", self.date_edit)
+        form_layout.addRow("Статус:", self.status_input)
+        form_layout.addRow("Ответственный:", self.responsible_combo)
 
         button_layout = QHBoxLayout()
         button_layout.addStretch()

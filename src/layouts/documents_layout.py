@@ -30,7 +30,7 @@ class DocumentsLayout(QWidget):
         self.regulatory_table = QTableWidget()
         self.regulatory_layout.addWidget(self.regulatory_table, stretch=6)  # Таблица займет 6/7 пространства
         self.regulatory_buttons_layout = QVBoxLayout()
-        self.reg_search_button = QPushButton('Поиск')
+        self.reg_search_button = QPushButton('Найти')
         self.reg_insert_button = QPushButton('Добавить')
         self.reg_update_button = QPushButton('Изменить')
         self.reg_delete_button = QPushButton('Удалить')
@@ -54,7 +54,7 @@ class DocumentsLayout(QWidget):
         self.internal_table = QTableWidget()
         self.internal_layout.addWidget(self.internal_table, stretch=6)  # Таблица займет 6/7 пространства
         self.internal_buttons_layout = QVBoxLayout()
-        self.inter_search_button = QPushButton('Поиск')
+        self.inter_search_button = QPushButton('Найти')
         self.inter_insert_button = QPushButton('Добавить')
         self.inter_update_button = QPushButton('Изменить')
         self.inter_delete_button = QPushButton('Удалить')

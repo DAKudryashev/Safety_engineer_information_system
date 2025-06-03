@@ -6,7 +6,7 @@ from PyQt5.QtCore import QDate, Qt
 class SearchRegulatoryDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Поиск элементов")
+        self.setWindowTitle("Поиск документов")
         self.setFixedSize(500, 300)
 
         # Стилизация

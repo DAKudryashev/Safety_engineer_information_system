@@ -9,7 +9,7 @@ class SearchEmployeeDialog(QDialog):
         self.setWindowTitle("Поиск сотрудников")
         self.setFixedSize(550, 600)  # Вернули исходный размер
 
-        # Стилизация (как в оригинале)
+        # Стилизация
         self.setStyleSheet("""
             QDialog {
                 background: #f5f5f5;
@@ -21,15 +21,18 @@ class SearchEmployeeDialog(QDialog):
                 font-weight: bold;
                 margin-bottom: 5px;
             }
-            QLineEdit {
+            QLineEdit, QComboBox, QDateEdit {
                 padding: 8px;
                 border: 1px solid #aaa;
                 border-radius: 4px;
                 min-width: 200px;
                 font-size: 14px;
             }
+            QComboBox QAbstractItemView {
+                min-width: 350px;
+            }
             QPushButton {
-                background: #2196F3;
+                background: #4CAF50;
                 color: white;
                 padding: 8px 16px;
                 border: none;
@@ -38,13 +41,19 @@ class SearchEmployeeDialog(QDialog):
                 font-size: 14px;
             }
             QPushButton:hover {
-                background: #0b7dda;
+                background: #45a049;
             }
             QPushButton#cancelButton {
                 background: #f44336;
             }
             QPushButton#cancelButton:hover {
                 background: #d32f2f;
+            }
+            #errorLabel {
+                color: red;
+                font-weight: normal;
+                margin-top: 10px;
+                margin-bottom: 10px;
             }
         """)
 

@@ -11,42 +11,48 @@ class SearchIncidentDialog(QDialog):
 
         # Стилизация
         self.setStyleSheet("""
-            QDialog {
-                background: #f5f5f5;
-                border: 1px solid #ccc;
-                border-radius: 5px;
-                font-size: 14px;
-            }
-            QLabel {
-                font-weight: bold;
-                margin-bottom: 5px;
-            }
-            QLineEdit, QDateEdit {
-                padding: 8px;
-                border: 1px solid #aaa;
-                border-radius: 4px;
-                min-width: 250px;
-                font-size: 14px;
-            }
-            QPushButton {
-                background: #2196F3;
-                color: white;
-                padding: 8px 16px;
-                border: none;
-                border-radius: 4px;
-                min-width: 100px;
-                font-size: 14px;
-            }
-            QPushButton:hover {
-                background: #45a049;
-            }
-            QPushButton#cancelButton {
-                background: #f44336;
-            }
-            QPushButton#cancelButton:hover {
-                background: #d32f2f;
-            }
-        """)
+                    QDialog {
+                        background: #f5f5f5;
+                        border: 1px solid #ccc;
+                        border-radius: 5px;
+                        font-size: 14px;
+                    }
+                    QLabel {
+                        font-weight: bold;
+                        margin-bottom: 5px;
+                    }
+                    QLineEdit, QDateEdit, QComboBox {
+                        padding: 8px;
+                        border: 1px solid #aaa;
+                        border-radius: 4px;
+                        min-width: 200px;
+                        font-size: 14px;
+                    }
+                    QPushButton {
+                        background: #4CAF50;
+                        color: white;
+                        padding: 8px 16px;
+                        border: none;
+                        border-radius: 4px;
+                        min-width: 100px;
+                        font-size: 14px;
+                    }
+                    QPushButton:hover {
+                        background: #45a049;
+                    }
+                    QPushButton#cancelButton {
+                        background: #f44336;
+                    }
+                    QPushButton#cancelButton:hover {
+                        background: #d32f2f;
+                    }
+                    #errorLabel {
+                        color: red;
+                        font-weight: normal;
+                        margin-top: 10px;
+                        margin-bottom: 10px;
+                    }
+                """)
 
         # Элементы формы
         self.content_input = QLineEdit()

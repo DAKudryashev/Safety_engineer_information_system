@@ -84,7 +84,7 @@ class InsertComplaintDialog(QDialog):
         self.error_label.setObjectName("errorLabel")
         self.error_label.setAlignment(Qt.AlignCenter)
         self.error_label.hide()
-        self.error_label.setText("Заполните все обязательные поля")
+        self.error_label.setText("Заполните все поля!")
 
         # Кнопки (без изменений)
         self.submit_btn = QPushButton("Добавить")
@@ -99,11 +99,11 @@ class InsertComplaintDialog(QDialog):
         form_layout.setSpacing(15)
         form_layout.setContentsMargins(20, 20, 20, 10)
 
-        form_layout.addRow("Автор*:", self.author_combo)
-        form_layout.addRow("Содержание*:", self.content_input)
-        form_layout.addRow("Дата*:", self.date_edit)
-        form_layout.addRow("Статус*:", self.status_input)
-        form_layout.addRow("Ответственный*:", self.responsible_combo)
+        form_layout.addRow("Автор:", self.author_combo)
+        form_layout.addRow("Содержание:", self.content_input)
+        form_layout.addRow("Дата:", self.date_edit)
+        form_layout.addRow("Статус:", self.status_input)
+        form_layout.addRow("Ответственный:", self.responsible_combo)
 
         button_layout = QHBoxLayout()
         button_layout.addStretch()

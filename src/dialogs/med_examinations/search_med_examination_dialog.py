@@ -6,7 +6,7 @@ from PyQt5.QtCore import QDate, Qt
 class SearchMedExamDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Поиск экзаменов на допуск")
+        self.setWindowTitle("Поиск медосмотров")
         self.setFixedSize(500, 350)
 
         # Стилизация (сохраняем единый стиль)

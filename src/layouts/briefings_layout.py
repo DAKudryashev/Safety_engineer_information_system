@@ -29,7 +29,7 @@ class BriefingsLayout(QWidget):
         self.planned_table = QTableWidget()
         self.planned_layout.addWidget(self.planned_table, stretch=6)  # Таблица займет 6/7 пространства
         self.planned_buttons_layout = QVBoxLayout()
-        self.planned_search_button = QPushButton('Поиск')
+        self.planned_search_button = QPushButton('Найти')
         self.planned_insert_button = QPushButton('Добавить')
         self.planned_update_button = QPushButton('Изменить')
         self.planned_delete_button = QPushButton('Удалить')
@@ -52,7 +52,7 @@ class BriefingsLayout(QWidget):
         self.completed_table = QTableWidget()
         self.completed_layout.addWidget(self.completed_table, stretch=6)  # Таблица займет 6/7 пространства
         self.completed_buttons_layout = QVBoxLayout()
-        self.comp_search_button = QPushButton('Поиск')
+        self.comp_search_button = QPushButton('Найти')
         self.comp_insert_button = QPushButton('Добавить')
         self.comp_update_button = QPushButton('Изменить')
         self.comp_delete_button = QPushButton('Удалить')

@@ -21,7 +21,7 @@ class SearchComplaintDialog(QDialog):
                 font-weight: bold;
                 margin-bottom: 5px;
             }
-            QLineEdit, QDateEdit {
+            QLineEdit, QDateEdit, QComboBox {
                 padding: 8px;
                 border: 1px solid #aaa;
                 border-radius: 4px;
@@ -29,7 +29,7 @@ class SearchComplaintDialog(QDialog):
                 font-size: 14px;
             }
             QPushButton {
-                background: #2196F3;
+                background: #4CAF50;
                 color: white;
                 padding: 8px 16px;
                 border: none;
@@ -38,7 +38,7 @@ class SearchComplaintDialog(QDialog):
                 font-size: 14px;
             }
             QPushButton:hover {
-                background: #0b7dda;
+                background: #45a049;
             }
             QPushButton#cancelButton {
                 background: #f44336;
@@ -46,8 +46,13 @@ class SearchComplaintDialog(QDialog):
             QPushButton#cancelButton:hover {
                 background: #d32f2f;
             }
+            #errorLabel {
+                color: red;
+                font-weight: normal;
+                margin-top: 10px;
+                margin-bottom: 10px;
+            }
         """)
-
         # Элементы формы (все с рукописным вводом)
         self.author_input = QLineEdit()
         self.author_input.setPlaceholderText("Автор жалобы")

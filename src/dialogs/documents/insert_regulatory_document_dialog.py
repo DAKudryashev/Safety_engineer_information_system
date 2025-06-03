@@ -6,7 +6,7 @@ from PyQt5.QtCore import QDate, Qt
 class InsertRegulatoryDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Добавить новый элемент")
+        self.setWindowTitle("Добавить документ")
         self.setFixedSize(500, 300)  # Чуть меньше высота, так как полей меньше
 
         # Стилизация (оставляем как в предыдущем диалоге)

@@ -105,8 +105,6 @@ class RoomsLayout(QWidget):
             self.rooms_table.setRowCount(0)
             self.fill_rooms_table(self.db.get_rooms())
 
-            QMessageBox.information(self, "Успех", "Запись успешно добавлена!")
-
     def update_button_clicked(self):
         # Считываем id выбранного элемента
         row = self.rooms_table.currentRow()

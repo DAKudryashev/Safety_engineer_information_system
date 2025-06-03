@@ -6,7 +6,7 @@ from PyQt5.QtCore import QDate, Qt
 class UpdateInternalDialog(QDialog):
     def __init__(self, current, engineers, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Добавить документ")
+        self.setWindowTitle("Изменить документ")
         self.setFixedSize(500, 350)  # Немного больше из-за дополнительного поля
 
         # Подготовка данных для ComboBox с ФИО

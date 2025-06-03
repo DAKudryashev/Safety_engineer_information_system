@@ -121,7 +121,7 @@ class UpdateRoomDialog(QDialog):
         """Проверяет заполнение всех полей"""
         if (not self.name_input.text().strip() or
                 not self.status_input.text().strip()):
-            self.error_label.setText("Заполните все обязательные поля!")
+            self.error_label.setText("Заполните все поля!")
             self.error_label.show()
             return
 

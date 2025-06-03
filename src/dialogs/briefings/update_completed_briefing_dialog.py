@@ -115,10 +115,10 @@ class UpdateCompletedDialog(QDialog):
         form_layout.setSpacing(15)
         form_layout.setContentsMargins(20, 20, 20, 10)
 
-        form_layout.addRow("Наименование:", self.name_input)
-        form_layout.addRow("Содержание:", self.content_input)
-        form_layout.addRow("Дата проведения:", self.date_edit)
-        form_layout.addRow("Ответственный:", self.responsible_combo)
+        form_layout.addRow("Наименование*:", self.name_input)
+        form_layout.addRow("Содержание*:", self.content_input)
+        form_layout.addRow("Дата проведения*:", self.date_edit)
+        form_layout.addRow("Ответственный*:", self.responsible_combo)
         form_layout.addRow("Документация:", self.document_combo)
 
         button_layout = QHBoxLayout()
@@ -137,7 +137,7 @@ class UpdateCompletedDialog(QDialog):
     def validate_form(self):
         """Проверяет заполнение обязательных полей"""
         if not self.name_input.text().strip() or not self.content_input.text().strip():
-            self.error_label.setText("Заполните все обязательные поля!")
+            self.error_label.setText("Заполните все поля со *!")
             self.error_label.show()
             return
 

@@ -6,7 +6,7 @@ from PyQt5.QtCore import QDate, Qt
 class UpdateRegulatoryDialog(QDialog):
     def __init__(self, current, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Изменить элемент")
+        self.setWindowTitle("Изменить документ")
         self.setFixedSize(500, 300)  # Чуть меньше высота, так как полей меньше
 
         # Стилизация (оставляем как в предыдущем диалоге)

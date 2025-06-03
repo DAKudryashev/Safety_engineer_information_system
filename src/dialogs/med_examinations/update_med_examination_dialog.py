@@ -6,7 +6,7 @@ from PyQt5.QtCore import QDate, Qt
 class UpdateMedExamDialog(QDialog):
     def __init__(self, current, documents, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Изменить экзамен")
+        self.setWindowTitle("Изменить медосмотр")
         self.setFixedSize(500, 400)
 
         # Подготовка данных для ComboBox
