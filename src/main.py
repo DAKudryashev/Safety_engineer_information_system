@@ -6,7 +6,7 @@ from database import DataBase
 from src.layouts.documents_layout import DocumentsLayout
 from src.layouts.employees_layout import EmployeesLayout
 from src.layouts.rooms_layout import RoomsLayout
-from src.layouts.briefings_layout import BriefingsLayout
+from src.layouts.briefings_layout import BriefingsLayout, BriefingsTab, PlannedBriefingsLayout, CompletedBriefingsLayout
 from src.layouts.examinations_layout import ExaminationsLayout
 from src.layouts.med_examinations_layout import MedExaminationsLayout
 from src.layouts.equipment_layout import EquipmentLayout
@@ -17,7 +17,7 @@ from src.layouts.extra_layout import ExtraLayout
 
 class InformationSys(QMainWindow):
     def __init__(self):
-        super(InformationSys, self).__init__()
+        super().__init__()
 
         # Подключаем БД
         self.db = DataBase()
@@ -40,9 +40,23 @@ class InformationSys(QMainWindow):
         self.tabs.addTab(self.tab1, 'Помещения')
 
         # Добавляем вкладку инструктажей, заполняем содержимое
-        self.tab2 = BriefingsLayout(self.db)
-        self.tab2.fill_planned_table(self.db.get_planned_briefings())
-        self.tab2.fill_completed_table(self.db.get_completed_briefings())
+        # self.tab2 = BriefingsLayout(self.db)
+        # self.tab2.fill_planned_table(self.db.get_planned_briefings())
+        # self.tab2.fill_completed_table(self.db.get_completed_briefings())
+        # self.tabs.addTab(self.tab2, 'Инструктажи')
+        """Новый пример"""
+        self.planned_briefings_layout = PlannedBriefingsLayout(self.db)
+        self.planned_briefings_layout.setup_table(self.db.get_planned_briefings())
+        self.planned_briefings_layout.setup_buttons_layout()
+        self.planned_briefings_layout.setup_ui()
+
+        self.completed_briefings_layout = CompletedBriefingsLayout(self.db)
+        self.completed_briefings_layout.setup_table(self.db.get_completed_briefings())
+        self.completed_briefings_layout.setup_buttons_layout()
+        self.completed_briefings_layout.setup_ui()
+
+        self.tab2 = BriefingsTab({'Запланированные инструктажи': self.planned_briefings_layout,
+                                  'Проведенные инструктажи': self.completed_briefings_layout})
         self.tabs.addTab(self.tab2, 'Инструктажи')
 
         # Добавляем вкладку сотрудников, заполняем содержимое
