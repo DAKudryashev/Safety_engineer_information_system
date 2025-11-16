@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTableWidget
+from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QTableWidget
 
 from database import DataBase
 
@@ -46,24 +46,3 @@ class BaseLayout(QHBoxLayout):
         """Функция, работающая при нажатии клавиши 'Обновить'"""
         pass
 
-
-class BaseTabWidget(QWidget):
-    def __init__(self):
-        super().__init__()
-
-        # Основной слой, куда будет добавлена остальная логика
-        self.tab_layout = QVBoxLayout()
-        self.setLayout(self.tab_layout)
-
-    def setup_ui(self):
-        """Устанавливает общие настройки визуальных элементов"""
-        self.setStyleSheet("QPushButton { font-size: 11pt; }")
-
-    def set_layouts(self, layouts: dict[str, BaseLayout]):
-        """Заполняет готовыми слоями"""
-        if self.tab_layout.count() != 0:
-            raise Exception('На вкладке уже есть элементы')
-
-        for label, layout in layouts.items():
-            self.tab_layout.addWidget(QLabel(label))
-            self.tab_layout.addLayout(layout)

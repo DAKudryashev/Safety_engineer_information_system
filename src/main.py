@@ -6,7 +6,8 @@ from database import DataBase
 from src.layouts.documents_layout import DocumentsLayout
 from src.layouts.employees_layout import EmployeesLayout
 from src.layouts.rooms_layout import RoomsLayout
-from src.layouts.briefings_layout import BriefingsLayout, BriefingsTab, PlannedBriefingsLayout, CompletedBriefingsLayout
+from main_window_tabs.briefings.briefings_tab import BriefingsTab
+from main_window_tabs.briefings.briefings_layouts import PlannedBriefingsLayout, CompletedBriefingsLayout
 from src.layouts.examinations_layout import ExaminationsLayout
 from src.layouts.med_examinations_layout import MedExaminationsLayout
 from src.layouts.equipment_layout import EquipmentLayout

@@ -1,6 +1,6 @@
 import psycopg2
 
-from config import DBNAME, USER, PASSWORD, HOST
+from db_config import DBNAME, USER, PASSWORD, HOST
 
 
 class DataBase:
